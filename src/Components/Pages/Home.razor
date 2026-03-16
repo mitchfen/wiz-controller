@@ -1,0 +1,77 @@
+@page "/"
+@using WizController.Services
+@inject WizService Wiz
+@inject IConfiguration Config
+@rendermode InteractiveServer
+
+<PageTitle>WiZ Controller</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>WiZ Light Controller</h1>
+        <div>
+            <button class="btn btn-success me-2" @onclick="TurnAllOn">All On</button>
+            <button class="btn btn-danger" @onclick="TurnAllOff">All Off</button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @for (int i = 0; i < LightIps.Length; i++)
+        {
+            var ip = LightIps[i];
+            var lightName = $"Light {i + 1}";
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@lightName</h5>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-outline-success" @onclick="() => Wiz.SetLightStateAsync(ip, true)">On</button>
+                            <button class="btn btn-outline-danger" @onclick="() => Wiz.SetLightStateAsync(ip, false)">Off</button>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="form-label small">Brightness</label>
+                            <input type="range" class="form-range" min="10" max="100" 
+                                   @onchange="(e) => ChangeBrightness(ip, e)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string[] LightIps = Array.Empty<string>();
+
+    protected override void OnInitialized()
+    {
+        LightIps = Config.GetSection("WizLights:Ips").Get<string[]>() ?? Array.Empty<string>();
+    }
+
+    private async Task TurnAllOn()
+    {
+        foreach (var ip in LightIps)
+        {
+            await Wiz.SetLightStateAsync(ip, true);
+        }
+    }
+
+    private async Task TurnAllOff()
+    {
+        foreach (var ip in LightIps)
+        {
+            await Wiz.SetLightStateAsync(ip, false);
+        }
+    }
+
+    private async Task ChangeBrightness(string ip, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int brightness))
+        {
+            await Wiz.SetBrightnessAsync(ip, brightness);
+        }
+    }
+}
