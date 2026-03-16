@@ -36,7 +36,7 @@ spec:
             - name: WizLights__Ips__3
               value: "192.168.1.27"
           ports:
-            - containerPort: 8080
+            - containerPort: 80
 
 ---
 apiVersion: v1
@@ -50,4 +50,4 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
+      targetPort: 80
