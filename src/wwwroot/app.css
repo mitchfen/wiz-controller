@@ -87,12 +87,6 @@ h1 {
     font-weight: 600;
 }
 
-.btn-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-}
-
 button {
     cursor: pointer;
     border: 1.5px solid transparent;
@@ -107,26 +101,6 @@ button {
 
 .btn-on { background: var(--success); color: white; }
 .btn-off { background: var(--danger); color: white; }
-
-.btn-outline-on { 
-    border-color: var(--success); 
-    color: var(--success); 
-    background: transparent; 
-}
-.btn-outline-on:hover {
-    background: var(--success);
-    color: white;
-}
-
-.btn-outline-off { 
-    border-color: var(--danger); 
-    color: var(--danger); 
-    background: transparent; 
-}
-.btn-outline-off:hover {
-    background: var(--danger);
-    color: white;
-}
 
 button:active {
     transform: scale(0.95);

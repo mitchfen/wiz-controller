@@ -4,9 +4,35 @@ using System.Text.Json;
 
 namespace WizController.Services;
 
+public record LightState(bool IsOn, int Brightness);
+
 public class WizService
 {
     private const int WizPort = 38899;
+
+    public async Task<LightState> GetLightStateAsync(string ip)
+    {
+        var payload = new { method = "getPilot", @params = new { } };
+        string jsonPayload = JsonSerializer.Serialize(payload);
+        byte[] data = Encoding.UTF8.GetBytes(jsonPayload);
+
+        using var udpClient = new UdpClient();
+        udpClient.Client.ReceiveTimeout = 2000;
+        try
+        {
+            await udpClient.SendAsync(data, data.Length, ip, WizPort);
+            var result = await udpClient.ReceiveAsync();
+            var doc = JsonDocument.Parse(Encoding.UTF8.GetString(result.Buffer));
+            var r = doc.RootElement.GetProperty("result");
+            bool isOn = r.GetProperty("state").GetBoolean();
+            int brightness = isOn && r.TryGetProperty("dimming", out var d) ? d.GetInt32() : 0;
+            return new LightState(isOn, brightness);
+        }
+        catch
+        {
+            return new LightState(false, 0);
+        }
+    }
 
     public async Task SetLightStateAsync(string ip, bool state)
     {
@@ -32,11 +58,11 @@ public class WizService
 
     public async Task SetBrightnessAsync(string ip, int brightness)
     {
-        // Brightness range: 10-100
+        // Brightness range: 1-100 (0 = off, handled by SetLightStateAsync)
         var payload = new
         {
             method = "setPilot",
-            @params = new { dimming = brightness }
+            @params = new { state = true, dimming = brightness }
         };
 
         string jsonPayload = JsonSerializer.Serialize(payload);
