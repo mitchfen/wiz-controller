@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using WizController.Services;
 
-namespace WizController.Components.Pages;
+namespace wizController.Components.Pages;
 
 public partial class Home : IDisposable
 {
