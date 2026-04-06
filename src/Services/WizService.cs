@@ -17,11 +17,11 @@ public class WizService
         byte[] data = Encoding.UTF8.GetBytes(jsonPayload);
 
         using var udpClient = new UdpClient();
-        udpClient.Client.ReceiveTimeout = 2000;
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(2000));
         try
         {
             await udpClient.SendAsync(data, data.Length, ip, WizPort);
-            var result = await udpClient.ReceiveAsync();
+            var result = await udpClient.ReceiveAsync(cts.Token);
             var doc = JsonDocument.Parse(Encoding.UTF8.GetString(result.Buffer));
             var r = doc.RootElement.GetProperty("result");
             bool isOn = r.GetProperty("state").GetBoolean();
