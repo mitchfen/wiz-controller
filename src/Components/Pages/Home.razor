@@ -4,13 +4,14 @@
 <PageTitle>WiZ Controller</PageTitle>
 
 <div class="container">
-    <header>
-        <h1>WiZ Light Controller</h1>
-        <div class="controls">
-            <button class="btn-on" @onclick="TurnAllOn">All On</button>
-            <button class="btn-off" @onclick="TurnAllOff">All Off</button>
+    <div class="master-control">
+        <label>All Lights</label>
+        <div class="master-slider-container">
+            <input type="range" min="0" max="100"
+                   value="@_masterBrightness"
+                   @onchange="(e) => SetAllBrightnessFromMaster(e)" />
         </div>
-    </header>
+    </div>
 
     <div class="light-grid">
         @for (int i = 0; i < LightIps.Length; i++)

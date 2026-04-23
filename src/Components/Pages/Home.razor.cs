@@ -11,6 +11,7 @@ public partial class Home : IDisposable
     private string[] LightIps = Array.Empty<string>();
     private string[] LightNames = Array.Empty<string>();
     private Dictionary<string, int> _brightness = new();
+    private int _masterBrightness = 0;
     private CancellationTokenSource? _cts;
 
     protected override async Task OnInitializedAsync()
@@ -53,21 +54,24 @@ public partial class Home : IDisposable
         }));
     }
 
-    private async Task TurnAllOn()
+    private async Task SetAllBrightness(int brightness)
     {
         foreach (var ip in LightIps)
         {
-            await Wiz.SetLightStateAsync(ip, true);
-            _brightness[ip] = 100;
+            _brightness[ip] = brightness;
+            if (brightness == 0)
+                await Wiz.SetLightStateAsync(ip, false);
+            else
+                await Wiz.SetBrightnessAsync(ip, brightness);
         }
     }
 
-    private async Task TurnAllOff()
+    private async Task SetAllBrightnessFromMaster(ChangeEventArgs e)
     {
-        foreach (var ip in LightIps)
+        if (int.TryParse(e.Value?.ToString(), out int brightness))
         {
-            await Wiz.SetLightStateAsync(ip, false);
-            _brightness[ip] = 0;
+            _masterBrightness = brightness;
+            await SetAllBrightness(brightness);
         }
     }
 
