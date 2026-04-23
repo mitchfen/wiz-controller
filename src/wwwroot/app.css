@@ -1,7 +1,5 @@
 :root {
     --primary: #0078d4;
-    --success: #107c10;
-    --danger: #a4262c;
     --bg: #111111;
     --card-bg: #1e1e1e;
     --text: #ffffff;
@@ -24,8 +22,6 @@ body {
     margin: 0 auto;
     padding: 3rem 1.5rem;
 }
-
-
 
 .master-control {
     background: var(--card-bg);
@@ -86,8 +82,6 @@ body {
         font-size: 0.75rem;
     }
 
-
-
     .master-control {
         padding: 1rem;
         margin-bottom: 1.5rem;
@@ -119,25 +113,6 @@ body {
     margin-bottom: 1.5rem;
     font-size: 1.25rem;
     font-weight: 600;
-}
-
-button {
-    cursor: pointer;
-    border: 1.5px solid transparent;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.btn-on { background: var(--success); color: white; }
-.btn-off { background: var(--danger); color: white; }
-
-button:active {
-    transform: scale(0.95);
 }
 
 .brightness-control {
