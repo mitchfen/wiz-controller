@@ -1,27 +1,30 @@
 # Build Stage
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /source
 
-# Copy csproj and restore dependencies
-COPY src/*.csproj src/
-RUN dotnet restore src/wizController.csproj
-
-# Copy remaining source code and publish
+# Copy source code
 COPY . .
-WORKDIR /source/src
-RUN dotnet publish wizController.csproj -c Release -o /app/publish
+
+# Build the application
+RUN go build -o wiz-controller ./cmd/wiz-controller
 
 # Runtime Stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+FROM alpine:latest
 WORKDIR /app
 
-# Copy published output from build stage
-COPY --from=build /app/publish .
+# Install ca-certificates for any HTTPS calls
+RUN apk --no-cache add ca-certificates
+
+# Copy binary from build stage
+COPY --from=build /source/wiz-controller .
+
+# Copy config and static files
+COPY config.json .
+COPY static ./static
 
 # The app expects port 80
 EXPOSE 80
-ENV ASPNETCORE_URLS=http://+:80
 
-ENTRYPOINT ["dotnet", "wizController.dll"]
+ENTRYPOINT ["./wiz-controller"]
 
 LABEL org.opencontainers.image.description="A simple WiZ light controller for local networks"

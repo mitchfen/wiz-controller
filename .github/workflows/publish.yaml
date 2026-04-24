@@ -9,10 +9,6 @@ concurrency:
   group: "publish-${{ github.ref }}"
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: pwsh
-
 permissions:
   contents: write
   packages: write
@@ -34,5 +30,4 @@ jobs:
         run: docker build -t ${{ env.imageName }} .
 
       - name: Push image
-        run: docker push ${{ env.imageName }} 
-
+        run: docker push ${{ env.imageName }}
