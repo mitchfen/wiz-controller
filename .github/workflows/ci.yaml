@@ -21,7 +21,7 @@ jobs:
     - name: Run container
       run: |
         docker run -d --name wiz-controller -p 8080:80 wiz-controller:test
-        sleep 10
+        sleep 3
 
     - name: Test site availability
       run: |
@@ -33,3 +33,6 @@ jobs:
           exit 1
         fi
 
+    - name: Verify HTML content
+      run: |
+        curl -s http://localhost:8080/ | grep -q "WiZ Controller" && echo "✓ HTML content verified"
