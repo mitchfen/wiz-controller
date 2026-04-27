@@ -11,13 +11,28 @@
       "192.168.1.24",
       "192.168.1.25",
       "192.168.1.26",
-      "192.168.1.27"
+      "192.168.1.27",
+      "192.168.1.28",
+      "192.168.1.29"
     ],
     "Names": [
       "Couch",
       "Window corner",
       "Record player",
-      "Behind desk"
+      "Behind desk",
+      "Bedroom1",
+      "Bedroom2"
+    ],
+    "PreferredScenes": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+    ],
+    "Groups": [
+      { "name": "Bedroom", "ips": ["192.168.1.28", "192.168.1.29"] }
     ]
   }
 }

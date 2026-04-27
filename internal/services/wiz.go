@@ -101,6 +101,38 @@ func (w *WizService) SetLightState(ip string, state bool) error {
 	return nil
 }
 
+func (w *WizService) SetScene(ip string, sceneId int) error {
+	payload := map[string]interface{}{
+		"method": "setPilot",
+		"params": map[string]int{"sceneId": sceneId},
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
+		Port: WizPort,
+		IP:   net.ParseIP(ip),
+	})
+	if err != nil {
+		return fmt.Errorf("error connecting to %s: %w", ip, err)
+	}
+	defer conn.Close()
+
+	if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
+		return fmt.Errorf("error setting deadline for %s: %w", ip, err)
+	}
+
+	_, err = conn.Write(data)
+	if err != nil {
+		return fmt.Errorf("error sending to %s: %w", ip, err)
+	}
+
+	return nil
+}
+
 func (w *WizService) SetBrightness(ip string, brightness int) error {
 	payload := map[string]interface{}{
 		"method": "setPilot",

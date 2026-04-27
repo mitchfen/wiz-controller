@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -40,7 +41,10 @@ func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
 }
 
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	if err := homeTemplate.Execute(w, h.cfg.Lights); err != nil {
+	if err := homeTemplate.Execute(w, map[string]interface{}{
+		"Lights": h.cfg.Lights,
+		"Groups": h.cfg.Groups,
+	}); err != nil {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Template error", http.StatusInternalServerError)
 	}
@@ -82,6 +86,59 @@ func (h *Handlers) SetBrightness(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handlers) SetGroupBrightness(w http.ResponseWriter, r *http.Request) {
+	groupName := r.PathValue("group")
+	brightness, err := strconv.Atoi(r.FormValue("brightness"))
+	if err != nil {
+		http.Error(w, "Invalid brightness value", http.StatusBadRequest)
+		return
+	}
+
+	if brightness < 0 || brightness > 100 {
+		http.Error(w, "Brightness must be 0-100", http.StatusBadRequest)
+		return
+	}
+
+	// Find group and set all lights in it
+	for _, group := range h.cfg.Groups {
+		if group.Name == groupName {
+			for _, ip := range group.IPs {
+				if brightness == 0 {
+					_ = h.wiz.SetLightState(ip, false)
+				} else {
+					_ = h.wiz.SetBrightness(ip, brightness)
+				}
+
+				h.mu.Lock()
+				h.state[ip] = &services.LightState{IsOn: brightness > 0, Brightness: brightness}
+				h.mu.Unlock()
+			}
+			break
+		}
+	}
+
+	// Return group cards for HTMX swap
+	w.Header().Set("Content-Type", "text/html")
+	if err := groupLightCardsTemplate.Execute(w, map[string]interface{}{
+		"Group":      groupName,
+		"IPs":        getGroupIPs(h.cfg.Groups, groupName),
+		"Brightness": brightness,
+	}); err != nil {
+		log.Printf("Template error: %v", err)
+	}
+}
+
+func (h *Handlers) SyncScenes(w http.ResponseWriter, r *http.Request) {
+	for _, light := range h.cfg.Lights {
+		if light.PreferredScene > 0 {
+			_ = h.wiz.SetScene(light.IP, light.PreferredScene)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "All lights synced to preferred scenes"}`)
+}
+
 func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 	brightness, err := strconv.Atoi(r.FormValue("brightness"))
 	if err != nil {
@@ -94,23 +151,26 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set all lights
+	// Set all lights except those in groups
 	for _, light := range h.cfg.Lights {
-		if brightness == 0 {
-			_ = h.wiz.SetLightState(light.IP, false)
-		} else {
-			_ = h.wiz.SetBrightness(light.IP, brightness)
-		}
+		if !isInGroup(light, h.cfg.Groups) {
+			if brightness == 0 {
+				_ = h.wiz.SetLightState(light.IP, false)
+			} else {
+				_ = h.wiz.SetBrightness(light.IP, brightness)
+			}
 
-		h.mu.Lock()
-		h.state[light.IP] = &services.LightState{IsOn: brightness > 0, Brightness: brightness}
-		h.mu.Unlock()
+			h.mu.Lock()
+			h.state[light.IP] = &services.LightState{IsOn: brightness > 0, Brightness: brightness}
+			h.mu.Unlock()
+		}
 	}
 
 	// Return all light cards for HTMX swap
 	w.Header().Set("Content-Type", "text/html")
 	if err := allLightCardsTemplate.Execute(w, map[string]interface{}{
 		"Lights":     h.cfg.Lights,
+		"Groups":     h.cfg.Groups,
 		"Brightness": brightness,
 	}); err != nil {
 		log.Printf("Template error: %v", err)
@@ -124,4 +184,13 @@ func (h *Handlers) getLightBrightness(ip string) int {
 		return state.Brightness
 	}
 	return 0
+}
+
+func getGroupIPs(groups []services.Group, groupName string) []string {
+	for _, group := range groups {
+		if group.Name == groupName {
+			return group.IPs
+		}
+	}
+	return []string{}
 }

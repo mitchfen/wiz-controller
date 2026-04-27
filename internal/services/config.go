@@ -7,12 +7,19 @@ import (
 )
 
 type Light struct {
-	IP   string
+	IP             string
+	Name           string
+	PreferredScene int
+}
+
+type Group struct {
 	Name string
+	IPs  []string
 }
 
 type Config struct {
 	Lights []Light
+	Groups []Group
 }
 
 func LoadConfig(filepath string) (*Config, error) {
@@ -23,8 +30,10 @@ func LoadConfig(filepath string) (*Config, error) {
 
 	var rawConfig struct {
 		WizLights struct {
-			IPs   []string `json:"Ips"`
-			Names []string `json:"Names"`
+			IPs             []string `json:"Ips"`
+			Names           []string `json:"Names"`
+			PreferredScenes []int    `json:"PreferredScenes"`
+			Groups          []Group  `json:"Groups"`
 		} `json:"WizLights"`
 	}
 
@@ -38,6 +47,7 @@ func LoadConfig(filepath string) (*Config, error) {
 
 	ips := rawConfig.WizLights.IPs
 	names := rawConfig.WizLights.Names
+	scenes := rawConfig.WizLights.PreferredScenes
 
 	// Generate default names if mismatch or missing
 	if len(names) != len(ips) {
@@ -47,10 +57,18 @@ func LoadConfig(filepath string) (*Config, error) {
 		}
 	}
 
-	lights := make([]Light, len(ips))
-	for i := range ips {
-		lights[i] = Light{IP: ips[i], Name: names[i]}
+	// Generate default scenes if mismatch or missing
+	if len(scenes) != len(ips) {
+		scenes = make([]int, len(ips))
+		for i := range scenes {
+			scenes[i] = 6 // default to scene 6
+		}
 	}
 
-	return &Config{Lights: lights}, nil
+	lights := make([]Light, len(ips))
+	for i := range ips {
+		lights[i] = Light{IP: ips[i], Name: names[i], PreferredScene: scenes[i]}
+	}
+
+	return &Config{Lights: lights, Groups: rawConfig.WizLights.Groups}, nil
 }
