@@ -41,9 +41,20 @@ func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
 }
 
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
+	state := make(map[string]*services.LightState)
+	for _, light := range h.cfg.Lights {
+		if s, err := h.wiz.GetLightState(light.IP); err == nil {
+			state[light.IP] = s
+		} else {
+			log.Printf("Failed to get state for %s: %v", light.IP, err)
+			state[light.IP] = &services.LightState{IsOn: false, Brightness: 0}
+		}
+	}
+
 	if err := homeTemplate.Execute(w, map[string]interface{}{
 		"Lights": h.cfg.Lights,
 		"Groups": h.cfg.Groups,
+		"State":  state,
 	}); err != nil {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Template error", http.StatusInternalServerError)
