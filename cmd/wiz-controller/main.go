@@ -30,6 +30,8 @@ func main() {
 	mux.HandleFunc("GET /", h.Home)
 	mux.HandleFunc("POST /api/lights/{ip}/brightness", h.SetBrightness)
 	mux.HandleFunc("POST /api/lights/all/brightness", h.SetAllBrightness)
+	mux.HandleFunc("POST /api/groups/{group}/brightness", h.SetGroupBrightness)
+	mux.HandleFunc("POST /api/sync-scenes", h.SyncScenes)
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	port := ":80"

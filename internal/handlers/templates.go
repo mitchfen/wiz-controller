@@ -2,9 +2,26 @@ package handlers
 
 import (
 	"text/template"
+
+	"github.com/mitchfen/wiz-controller/internal/services"
 )
 
-var homeTemplate = template.Must(template.New("home").Parse(`<!DOCTYPE html>
+func isInGroup(light services.Light, groups []services.Group) bool {
+	for _, group := range groups {
+		for _, ip := range group.IPs {
+			if ip == light.IP {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+var funcMap = template.FuncMap{
+	"isInGroup": isInGroup,
+}
+
+var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -25,10 +42,12 @@ var homeTemplate = template.Must(template.New("home").Parse(`<!DOCTYPE html>
 					hx-target=".light-grid"
 					name="brightness" />
 			</div>
+			<button hx-post="/api/sync-scenes" hx-swap="none">Reset to preferred scenes</button>
 		</div>
 
 		<div class="light-grid" id="light-grid">
-			{{range .}}
+			{{range .Lights}}
+			{{if not (isInGroup . $.Groups)}}
 			<div class="card" id="light-{{.IP}}">
 				<h5>{{.Name}}</h5>
 				<div class="brightness-control">
@@ -37,6 +56,22 @@ var homeTemplate = template.Must(template.New("home").Parse(`<!DOCTYPE html>
 						hx-post="/api/lights/{{.IP}}/brightness"
 						hx-trigger="change"
 						hx-swap="outerHTML"
+						name="brightness" />
+				</div>
+			</div>
+			{{end}}
+			{{end}}
+			
+			{{range .Groups}}
+			<div class="card group-card" id="group-{{.Name}}">
+				<h5>{{.Name}}</h5>
+				<div class="brightness-control">
+					<label>Brightness</label>
+					<input type="range" min="0" max="100" value="0"
+						hx-post="/api/groups/{{.Name}}/brightness"
+						hx-trigger="change"
+						hx-swap="innerHTML"
+						hx-target="#group-{{.Name}} .brightness-control"
 						name="brightness" />
 				</div>
 			</div>
@@ -58,7 +93,9 @@ var lightCardTemplate = template.Must(template.New("light-card").Parse(`<div cla
 	</div>
 </div>`))
 
-var allLightCardsTemplate = template.Must(template.New("all-light-cards").Parse(`{{range .Lights}}<div class="card" id="light-{{.IP}}">
+var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(funcMap).Parse(`{{range .Lights}}
+{{if not (isInGroup . $.Groups)}}
+<div class="card" id="light-{{.IP}}">
 	<h5>{{.Name}}</h5>
 	<div class="brightness-control">
 		<label>Brightness</label>
@@ -68,4 +105,16 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Parse(
 			hx-swap="outerHTML"
 			name="brightness" />
 	</div>
-</div>{{end}}`))
+</div>
+{{end}}
+{{end}}`))
+
+var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Parse(`<div class="brightness-control">
+	<label>Brightness</label>
+	<input type="range" min="0" max="100" value="{{.Brightness}}"
+		hx-post="/api/groups/{{.Group}}/brightness"
+		hx-trigger="change"
+		hx-swap="innerHTML"
+		hx-target="#group-{{.Group}} .brightness-control"
+		name="brightness" />
+</div>`))
