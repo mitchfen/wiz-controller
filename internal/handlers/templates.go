@@ -17,8 +17,16 @@ func isInGroup(light services.Light, groups []services.Group) bool {
 	return false
 }
 
+func getBrightness(state map[string]*services.LightState, ip string) int {
+	if s, ok := state[ip]; ok && s.IsOn {
+		return s.Brightness
+	}
+	return 0
+}
+
 var funcMap = template.FuncMap{
-	"isInGroup": isInGroup,
+	"isInGroup":     isInGroup,
+	"getBrightness": getBrightness,
 }
 
 var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DOCTYPE html>
@@ -52,10 +60,11 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 				<h5>{{.Name}}</h5>
 				<div class="brightness-control">
 					<label>Brightness</label>
-					<input type="range" min="0" max="100" value="0"
+					<input type="range" min="0" max="100" value="{{getBrightness $.State .IP}}"
 						hx-post="/api/lights/{{.IP}}/brightness"
 						hx-trigger="change"
 						hx-swap="outerHTML"
+						hx-target="#light-{{.IP}}"
 						name="brightness" />
 				</div>
 			</div>
@@ -67,7 +76,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 				<h5>{{.Name}}</h5>
 				<div class="brightness-control">
 					<label>Brightness</label>
-					<input type="range" min="0" max="100" value="0"
+					<input type="range" min="0" max="100" value="{{getBrightness $.State (index .IPs 0)}}"
 						hx-post="/api/groups/{{.Name}}/brightness"
 						hx-trigger="change"
 						hx-swap="innerHTML"
@@ -89,6 +98,7 @@ var lightCardTemplate = template.Must(template.New("light-card").Parse(`<div cla
 			hx-post="/api/lights/{{.IP}}/brightness"
 			hx-trigger="change"
 			hx-swap="outerHTML"
+			hx-target="#light-{{.IP}}"
 			name="brightness" />
 	</div>
 </div>`))
@@ -103,6 +113,7 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 			hx-post="/api/lights/{{.IP}}/brightness"
 			hx-trigger="change"
 			hx-swap="outerHTML"
+			hx-target="#light-{{.IP}}"
 			name="brightness" />
 	</div>
 </div>
