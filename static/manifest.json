@@ -1,0 +1,15 @@
+{
+  "name": "WiZ Controller",
+  "short_name": "WiZ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "icons": [
+    {
+      "src": "/static/favicon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
