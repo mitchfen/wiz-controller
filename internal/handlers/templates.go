@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"text/template"
 
 	"github.com/mitchfen/wiz-controller/internal/services"
@@ -24,9 +25,15 @@ func getBrightness(state map[string]*services.LightState, ip string) int {
 	return 0
 }
 
+// ipToID converts an IP address to a safe HTML/CSS identifier by replacing dots with dashes.
+func ipToID(ip string) string {
+	return strings.ReplaceAll(ip, ".", "-")
+}
+
 var funcMap = template.FuncMap{
 	"isInGroup":     isInGroup,
 	"getBrightness": getBrightness,
+	"ipToID":        ipToID,
 }
 
 var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DOCTYPE html>
@@ -41,7 +48,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 <body>
 	<div class="container">
 		<div class="master-control">
-			<label>All Lights</label>
+			<label>All Living Room Lights</label>
 			<div class="master-slider-container">
 				<input type="range" min="0" max="100" value="0"
 					hx-post="/api/lights/all/brightness"
@@ -50,13 +57,12 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 					hx-target=".light-grid"
 					name="brightness" />
 			</div>
-			<button hx-post="/api/sync-scenes" hx-swap="none">Reset to preferred scenes</button>
-		</div>
+			</div>
 
 		<div class="light-grid" id="light-grid">
 			{{range .Lights}}
 			{{if not (isInGroup . $.Groups)}}
-			<div class="card" id="light-{{.IP}}">
+			<div class="card" id="light-{{ipToID .IP}}">
 				<h5>{{.Name}}</h5>
 				<div class="brightness-control">
 					<label>Brightness</label>
@@ -64,7 +70,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 						hx-post="/api/lights/{{.IP}}/brightness"
 						hx-trigger="change"
 						hx-swap="outerHTML"
-						hx-target="#light-{{.IP}}"
+						hx-target="#light-{{ipToID .IP}}"
 						name="brightness" />
 				</div>
 			</div>
@@ -90,7 +96,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 </body>
 </html>`))
 
-var lightCardTemplate = template.Must(template.New("light-card").Parse(`<div class="card" id="light-{{.IP}}">
+var lightCardTemplate = template.Must(template.New("light-card").Funcs(funcMap).Parse(`<div class="card" id="light-{{ipToID .IP}}">
 	<h5>{{.Name}}</h5>
 	<div class="brightness-control">
 		<label>Brightness</label>
@@ -98,14 +104,14 @@ var lightCardTemplate = template.Must(template.New("light-card").Parse(`<div cla
 			hx-post="/api/lights/{{.IP}}/brightness"
 			hx-trigger="change"
 			hx-swap="outerHTML"
-			hx-target="#light-{{.IP}}"
+			hx-target="#light-{{ipToID .IP}}"
 			name="brightness" />
 	</div>
 </div>`))
 
 var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(funcMap).Parse(`{{range .Lights}}
 {{if not (isInGroup . $.Groups)}}
-<div class="card" id="light-{{.IP}}">
+<div class="card" id="light-{{ipToID .IP}}">
 	<h5>{{.Name}}</h5>
 	<div class="brightness-control">
 		<label>Brightness</label>
@@ -113,7 +119,7 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 			hx-post="/api/lights/{{.IP}}/brightness"
 			hx-trigger="change"
 			hx-swap="outerHTML"
-			hx-target="#light-{{.IP}}"
+			hx-target="#light-{{ipToID .IP}}"
 			name="brightness" />
 	</div>
 </div>
