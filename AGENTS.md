@@ -18,16 +18,16 @@ Port: 80 by default, override with `PORT` env var
 
 | IP             | Name          | Location / Notes                              | Preferred Scene |
 |----------------|---------------|-----------------------------------------------|-----------------|
-| 192.168.1.24   | Couch         | Living room — individual fixture              | 6               |
-| 192.168.1.25   | Window corner | Living room — individual fixture              | 6               |
-| 192.168.1.26   | Record player | Living room — individual fixture              | 6               |
-| 192.168.1.27   | Behind desk   | Living room — individual fixture              | 6               |
-| 192.168.1.28   | Bedroom1      | Bedroom — **inside same fixture as Bedroom2** | 6               |
-| 192.168.1.29   | Bedroom2      | Bedroom — **inside same fixture as Bedroom1** | 6               |
+| 192.168.1.24   | Couch         | Living room — individual fixture              | 11              |
+| 192.168.1.25   | Window corner | Living room — individual fixture              | 11              |
+| 192.168.1.26   | Record player | Living room — individual fixture              | 11              |
+| 192.168.1.27   | Behind desk   | Living room — individual fixture              | 11              |
+| 192.168.1.28   | Bedroom1      | Bedroom — **inside same fixture as Bedroom2** | 11              |
+| 192.168.1.29   | Bedroom2      | Bedroom — **inside same fixture as Bedroom1** | 11              |
 
 ### Key distinctions
-- **Living room lights (.24–.27)**: older generation, individual fixtures, Scene 6 is the preferred warm default.
-- **Bedroom lights (.28–.29)**: newer generation, physically inside one shared fixture, always controlled together as the `Bedroom` group. Their `getPilot` response includes a `temp` field (color temperature in Kelvin, e.g. 4200K) which older lights do not return. Preferred scene is also 6.
+- **Living room lights (.24–.27)**: older generation, individual fixtures, Scene 11 is the preferred warm default.
+- **Bedroom lights (.28–.29)**: newer generation, physically inside one shared fixture, always controlled together as the `Bedroom` group. Their `getPilot` response includes a `temp` field (color temperature in Kelvin, e.g. 4200K) which older lights do not return. Preferred scene is also 11.
 
 ---
 
@@ -45,7 +45,7 @@ Request:
 {"method": "getPilot", "params": {}}
 ```
 
-Example response (living room light on Scene 6):
+Example response (living room light on Scene 11):
 ```json
 {
   "method": "getPilot",
@@ -54,13 +54,13 @@ Example response (living room light on Scene 6):
     "mac": "444f8e1b6ae6",
     "rssi": -66,
     "state": true,
-    "sceneId": 6,
+    "sceneId": 11,
     "dimming": 89
   }
 }
 ```
 
-Example response (bedroom light on Scene 12 with color temperature):
+Example response (bedroom light on Scene 11 with color temperature):
 ```json
 {
   "method": "getPilot",
@@ -69,7 +69,7 @@ Example response (bedroom light on Scene 12 with color temperature):
     "mac": "cc40859cce96",
     "rssi": -60,
     "state": true,
-    "sceneId": 12,
+    "sceneId": 11,
     "temp": 4200,
     "dimming": 100
   }
@@ -120,7 +120,7 @@ Set brightness (also turns on):
 
 Set scene:
 ```json
-{"method": "setPilot", "params": {"sceneId": 6}}
+{"method": "setPilot", "params": {"sceneId": 11}}
 ```
 
 Set color temperature:
@@ -176,7 +176,7 @@ wiz-controller/
   "WizLights": {
     "Ips": ["192.168.1.24", ...],
     "Names": ["Couch", ...],
-    "PreferredScenes": [6, 6, 6, 6, 12, 12],
+    "PreferredScenes": [11, 11, 11, 11, 11, 11],
     "Groups": [
       { "name": "Bedroom", "ips": ["192.168.1.28", "192.168.1.29"] }
     ]
@@ -186,14 +186,14 @@ wiz-controller/
 
 - Arrays are positionally aligned: `Ips[i]`, `Names[i]`, `PreferredScenes[i]` all refer to the same light.
 - Groups cause those lights to be hidden from individual sliders in the UI and exposed as a single group slider.
-- Default scene is 6 if `PreferredScenes` length doesn't match `Ips`.
+- Default scene is 11 if `PreferredScenes` length doesn't match `Ips`.
 
 ---
 
 ## Design Decisions & History
 
-- **Scene 6** is the preferred warm scene for the 4 living room lights. It does not expose RGB/temp values in `getPilot` — those are controlled internally by the scene.
-- **Scene 12** is the preferred scene for the 2 bedroom lights. Returns `temp: 4200` (neutral white) in state.
+- **Scene 11** is the preferred warm scene for all lights. It does not expose RGB/temp values in `getPilot` — those are controlled internally by the scene.
+- Known scene numbers: **6** = Cozy, **11** = Warm white, **12** = Daylight.
 - The owner wanted to match a specific "warm" light color from the proprietary WiZ app. A future improvement is to fetch the current color/state from lights and display it in the UI so the owner can reproduce settings without switching back to the proprietary app.
 - `LightState` struct in `wiz.go` currently only captures `IsOn` and `Brightness`. It **does not yet capture** `r`, `g`, `b`, `c`, `w`, `temp`, or `sceneId` — extending it is a known future task.
 - The `allLightCardsTemplate` and home template exclude grouped lights from individual controls using the `isInGroup` template func.
