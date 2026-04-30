@@ -10,6 +10,30 @@ import (
 	"github.com/mitchfen/wiz-controller/internal/services"
 )
 
+func fetchAllStates(wiz *services.WizService, lights []services.Light) map[string]*services.LightState {
+	state := make(map[string]*services.LightState, len(lights))
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for _, light := range lights {
+		wg.Add(1)
+		go func(l services.Light) {
+			defer wg.Done()
+			s, err := wiz.GetLightState(l.IP)
+			if err != nil {
+				log.Printf("Failed to get state for %s: %v", l.IP, err)
+				s = &services.LightState{IsOn: false, Brightness: 0}
+			}
+			mu.Lock()
+			state[l.IP] = s
+			mu.Unlock()
+		}(light)
+	}
+
+	wg.Wait()
+	return state
+}
+
 type Handlers struct {
 	cfg    *services.Config
 	wiz    *services.WizService
@@ -26,30 +50,21 @@ func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
 		lights: make(map[string]string),
 	}
 
-	// Load initial state and build IP->name mapping
+	// Build IP->name mapping
 	for _, light := range cfg.Lights {
 		h.lights[light.IP] = light.Name
-		if state, err := wiz.GetLightState(light.IP); err == nil {
-			h.state[light.IP] = state
-		} else {
-			log.Printf("Failed to get state for %s: %v", light.IP, err)
-			h.state[light.IP] = &services.LightState{IsOn: false, Brightness: 0}
-		}
+	}
+
+	// Load initial state concurrently
+	for ip, s := range fetchAllStates(wiz, cfg.Lights) {
+		h.state[ip] = s
 	}
 
 	return h
 }
 
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	state := make(map[string]*services.LightState)
-	for _, light := range h.cfg.Lights {
-		if s, err := h.wiz.GetLightState(light.IP); err == nil {
-			state[light.IP] = s
-		} else {
-			log.Printf("Failed to get state for %s: %v", light.IP, err)
-			state[light.IP] = &services.LightState{IsOn: false, Brightness: 0}
-		}
-	}
+	state := fetchAllStates(h.wiz, h.cfg.Lights)
 
 	if err := homeTemplate.Execute(w, map[string]interface{}{
 		"Lights": h.cfg.Lights,
