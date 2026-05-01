@@ -34,6 +34,7 @@ var funcMap = template.FuncMap{
 	"isInGroup":     isInGroup,
 	"getBrightness": getBrightness,
 	"ipToID":        ipToID,
+	"getGroupIPs":   getGroupIPs,
 }
 
 var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DOCTYPE html>
@@ -44,6 +45,22 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 	<title>WiZ Controller</title>
 	<link rel="stylesheet" href="/static/style.css">
 	<script src="https://unpkg.com/htmx.org@2.0.0"></script>
+	<script>
+		document.body.addEventListener('htmx:afterRequest', function(evt) {
+			if (evt.detail.xhr.status === 200) {
+				const button = evt.detail.target;
+				if (button.classList.contains('scene-btn')) {
+					const feedbackDiv = document.getElementById('scene-feedback');
+					const sceneName = button.textContent.trim();
+					feedbackDiv.textContent = sceneName + ' scene activated!';
+					feedbackDiv.style.display = 'block';
+					setTimeout(() => {
+						feedbackDiv.style.display = 'none';
+					}, 2000);
+				}
+			}
+		});
+	</script>
 </head>
 <body>
 	<div class="container">
@@ -57,7 +74,28 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 					hx-target=".light-grid"
 					name="brightness" />
 			</div>
+		</div>
+
+		<div class="master-control">
+			<label>Bedroom</label>
+			<div class="master-slider-container">
+				<input type="range" min="0" max="100" value="{{getBrightness $.State (index (getGroupIPs $.Groups "Bedroom") 0)}}"
+					hx-post="/api/groups/Bedroom/brightness"
+					hx-trigger="change"
+					hx-swap="innerHTML"
+					hx-target="#group-Bedroom .brightness-control"
+					name="brightness" />
 			</div>
+		</div>
+
+		<div class="master-control">
+			<label>Scene Presets</label>
+			<div class="scene-buttons">
+				<button hx-post="/api/scenes/warm" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+				<button hx-post="/api/scenes/daylight" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
+			</div>
+			<div id="scene-feedback" class="scene-feedback" style="display: none;"></div>
+		</div>
 
 		<div class="light-grid" id="light-grid">
 			{{range .Lights}}
@@ -75,21 +113,6 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 				</div>
 			</div>
 			{{end}}
-			{{end}}
-			
-			{{range .Groups}}
-			<div class="card" id="group-{{.Name}}" hx-preserve>
-				<h5>{{.Name}}</h5>
-				<div class="brightness-control">
-					<label>Brightness</label>
-					<input type="range" min="0" max="100" value="{{getBrightness $.State (index .IPs 0)}}"
-						hx-post="/api/groups/{{.Name}}/brightness"
-						hx-trigger="change"
-						hx-swap="innerHTML"
-						hx-target="#group-{{.Name}} .brightness-control"
-						name="brightness" />
-				</div>
-			</div>
 			{{end}}
 		</div>
 	</div>
@@ -124,20 +147,6 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 	</div>
 </div>
 {{end}}
-{{end}}
-{{range .Groups}}
-<div class="card" id="group-{{.Name}}" hx-preserve>
-	<h5>{{.Name}}</h5>
-	<div class="brightness-control">
-		<label>Brightness</label>
-		<input type="range" min="0" max="100"
-			hx-post="/api/groups/{{.Name}}/brightness"
-			hx-trigger="change"
-			hx-swap="innerHTML"
-			hx-target="#group-{{.Name}} .brightness-control"
-			name="brightness" />
-	</div>
-</div>
 {{end}}`))
 
 var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Parse(`<div class="brightness-control">

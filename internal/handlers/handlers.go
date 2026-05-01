@@ -149,6 +149,31 @@ func (h *Handlers) SyncScenes(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{"status": "ok", "message": "All lights synced to preferred scenes"}`)
 }
 
+func (h *Handlers) SetWarm(w http.ResponseWriter, r *http.Request) {
+	// Living room lights: Scene 6 (Cozy)
+	// Bedroom lights: Scene 11 (Warm white)
+	for _, light := range h.cfg.Lights {
+		sceneId := 6 // default to living room scene
+		if isInGroup(light, h.cfg.Groups) {
+			sceneId = 11 // bedroom scene
+		}
+		_ = h.wiz.SetScene(light.IP, sceneId)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "All lights set to warm"}`)
+}
+
+func (h *Handlers) SetDaylight(w http.ResponseWriter, r *http.Request) {
+	// All lights: Scene 12 (Daylight)
+	for _, light := range h.cfg.Lights {
+		_ = h.wiz.SetScene(light.IP, 12)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "All lights set to daylight"}`)
+}
+
 func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 	brightness, err := strconv.Atoi(r.FormValue("brightness"))
 	if err != nil {
