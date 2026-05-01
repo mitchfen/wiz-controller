@@ -45,6 +45,61 @@ body {
 	align-items: center;
 }
 
+.scene-buttons {
+	display: flex;
+	gap: 12px;
+}
+
+.scene-btn {
+	flex: 1;
+	padding: 10px 16px;
+	border: 2px solid #667eea;
+	background: white;
+	color: #667eea;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.scene-btn:hover {
+	background: #667eea;
+	color: white;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.scene-btn:active {
+	transform: scale(0.98);
+}
+
+.scene-feedback {
+	margin-top: 12px;
+	padding: 10px 16px;
+	background: #4caf50;
+	color: white;
+	border-radius: 6px;
+	font-weight: 600;
+	font-size: 14px;
+	text-align: center;
+	animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+	0% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	90% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-5px);
+	}
+}
+
 .master-slider-container input[type="range"],
 .brightness-control input[type="range"] {
 	flex: 1;

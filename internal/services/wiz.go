@@ -12,6 +12,7 @@ const WizPort = 38899
 type LightState struct {
 	IsOn       bool `json:"state"`
 	Brightness int  `json:"dimming"`
+	SceneId    int  `json:"sceneId"`
 }
 
 type WizService struct{}
