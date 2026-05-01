@@ -37,8 +37,6 @@ func fetchAllStates(wiz *services.WizService, lights []services.Light) map[strin
 type Handlers struct {
 	cfg    *services.Config
 	wiz    *services.WizService
-	mu     sync.RWMutex
-	state  map[string]*services.LightState
 	lights map[string]string // ip -> name mapping
 }
 
@@ -46,18 +44,12 @@ func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
 	h := &Handlers{
 		cfg:    cfg,
 		wiz:    wiz,
-		state:  make(map[string]*services.LightState),
 		lights: make(map[string]string),
 	}
 
 	// Build IP->name mapping
 	for _, light := range cfg.Lights {
 		h.lights[light.IP] = light.Name
-	}
-
-	// Load initial state concurrently
-	for ip, s := range fetchAllStates(wiz, cfg.Lights) {
-		h.state[ip] = s
 	}
 
 	return h
@@ -96,11 +88,6 @@ func (h *Handlers) SetBrightness(w http.ResponseWriter, r *http.Request) {
 		_ = h.wiz.SetBrightness(ip, brightness)
 	}
 
-	// Update local state
-	h.mu.Lock()
-	h.state[ip] = &services.LightState{IsOn: brightness > 0, Brightness: brightness}
-	h.mu.Unlock()
-
 	// Return HTML for HTMX swap
 	w.Header().Set("Content-Type", "text/html")
 	if err := lightCardTemplate.Execute(w, map[string]interface{}{
@@ -135,9 +122,6 @@ func (h *Handlers) SetGroupBrightness(w http.ResponseWriter, r *http.Request) {
 					_ = h.wiz.SetBrightness(ip, brightness)
 				}
 
-				h.mu.Lock()
-				h.state[ip] = &services.LightState{IsOn: brightness > 0, Brightness: brightness}
-				h.mu.Unlock()
 			}
 			break
 		}
@@ -185,10 +169,6 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 			} else {
 				_ = h.wiz.SetBrightness(light.IP, brightness)
 			}
-
-			h.mu.Lock()
-			h.state[light.IP] = &services.LightState{IsOn: brightness > 0, Brightness: brightness}
-			h.mu.Unlock()
 		}
 	}
 
@@ -201,15 +181,6 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		log.Printf("Template error: %v", err)
 	}
-}
-
-func (h *Handlers) getLightBrightness(ip string) int {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	if state, ok := h.state[ip]; ok && state.IsOn {
-		return state.Brightness
-	}
-	return 0
 }
 
 func getGroupIPs(groups []services.Group, groupName string) []string {

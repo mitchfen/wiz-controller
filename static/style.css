@@ -19,12 +19,16 @@ body {
 	width: 100%;
 }
 
-.master-control {
+.master-control,
+.card {
 	background: white;
 	border-radius: 12px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.master-control {
 	padding: 24px;
 	margin-bottom: 24px;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .master-control label {
@@ -41,7 +45,8 @@ body {
 	align-items: center;
 }
 
-.master-slider-container input[type="range"] {
+.master-slider-container input[type="range"],
+.brightness-control input[type="range"] {
 	flex: 1;
 	height: 6px;
 	border-radius: 3px;
@@ -49,9 +54,11 @@ body {
 	outline: none;
 	-webkit-appearance: none;
 	appearance: none;
+	cursor: pointer;
 }
 
-.master-slider-container input[type="range"]::-webkit-slider-thumb {
+.master-slider-container input[type="range"]::-webkit-slider-thumb,
+.brightness-control input[type="range"]::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
 	width: 20px;
@@ -62,7 +69,8 @@ body {
 	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
-.master-slider-container input[type="range"]::-moz-range-thumb {
+.master-slider-container input[type="range"]::-moz-range-thumb,
+.brightness-control input[type="range"]::-moz-range-thumb {
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
@@ -79,10 +87,7 @@ body {
 }
 
 .card {
-	background: white;
-	border-radius: 12px;
 	padding: 20px;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -108,37 +113,6 @@ body {
 	font-size: 14px;
 	font-weight: 500;
 	color: #666;
-}
-
-.brightness-control input[type="range"] {
-	height: 6px;
-	border-radius: 3px;
-	background: #e0e0e0;
-	outline: none;
-	-webkit-appearance: none;
-	appearance: none;
-	cursor: pointer;
-}
-
-.brightness-control input[type="range"]::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 18px;
-	height: 18px;
-	border-radius: 50%;
-	background: #667eea;
-	cursor: pointer;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-}
-
-.brightness-control input[type="range"]::-moz-range-thumb {
-	width: 18px;
-	height: 18px;
-	border-radius: 50%;
-	background: #667eea;
-	cursor: pointer;
-	border: none;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 @media (max-width: 600px) {

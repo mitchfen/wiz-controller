@@ -78,7 +78,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 			{{end}}
 			
 			{{range .Groups}}
-			<div class="card group-card" id="group-{{.Name}}">
+			<div class="card" id="group-{{.Name}}" hx-preserve>
 				<h5>{{.Name}}</h5>
 				<div class="brightness-control">
 					<label>Brightness</label>
@@ -124,6 +124,20 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 	</div>
 </div>
 {{end}}
+{{end}}
+{{range .Groups}}
+<div class="card" id="group-{{.Name}}" hx-preserve>
+	<h5>{{.Name}}</h5>
+	<div class="brightness-control">
+		<label>Brightness</label>
+		<input type="range" min="0" max="100"
+			hx-post="/api/groups/{{.Name}}/brightness"
+			hx-trigger="change"
+			hx-swap="innerHTML"
+			hx-target="#group-{{.Name}} .brightness-control"
+			name="brightness" />
+	</div>
+</div>
 {{end}}`))
 
 var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Parse(`<div class="brightness-control">
