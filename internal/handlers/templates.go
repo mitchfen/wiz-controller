@@ -64,38 +64,43 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 </head>
 <body>
 	<div class="container">
-		<div class="master-control">
-			<label>All Living Room Lights</label>
-			<div class="master-slider-container">
-				<input type="range" min="0" max="100" value="0"
-					hx-post="/api/lights/all/brightness"
-					hx-trigger="change"
-					hx-swap="innerHTML"
-					hx-target=".light-grid"
-					name="brightness" />
+		<div class="control-row">
+			<div class="master-control">
+				<label>All Living Room Lights</label>
+				<div class="master-slider-container">
+					<input type="range" min="0" max="100" value="0"
+						hx-post="/api/lights/all/brightness"
+						hx-trigger="change"
+						hx-swap="innerHTML"
+						hx-target=".light-grid"
+						name="brightness" />
+				</div>
+			</div>
+			<div class="scene-buttons-inline">
+				<button hx-post="/api/scenes/warm-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+				<button hx-post="/api/scenes/daylight-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
 			</div>
 		</div>
 
-		<div class="master-control">
-			<label>Bedroom</label>
-			<div class="master-slider-container">
-				<input type="range" min="0" max="100" value="{{getBrightness $.State (index (getGroupIPs $.Groups "Bedroom") 0)}}"
-					hx-post="/api/groups/Bedroom/brightness"
-					hx-trigger="change"
-					hx-swap="innerHTML"
-					hx-target="#group-Bedroom .brightness-control"
-					name="brightness" />
+		<div class="control-row">
+			<div class="master-control" id="group-Bedroom">
+				<label>Bedroom</label>
+				<div class="master-slider-container brightness-control">
+					<input type="range" min="0" max="100" value="{{getBrightness $.State (index (getGroupIPs $.Groups "Bedroom") 0)}}"
+						hx-post="/api/groups/Bedroom/brightness"
+						hx-trigger="change"
+						hx-swap="innerHTML"
+						hx-target="#group-Bedroom .brightness-control"
+						name="brightness" />
+				</div>
+			</div>
+			<div class="scene-buttons-inline">
+				<button hx-post="/api/scenes/warm-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+				<button hx-post="/api/scenes/daylight-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
 			</div>
 		</div>
 
-		<div class="master-control">
-			<label>Scene Presets</label>
-			<div class="scene-buttons">
-				<button hx-post="/api/scenes/warm" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
-				<button hx-post="/api/scenes/daylight" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
-			</div>
-			<div id="scene-feedback" class="scene-feedback" style="display: none;"></div>
-		</div>
+		<div id="scene-feedback" class="scene-feedback" style="display: none;"></div>
 
 		<div class="light-grid" id="light-grid">
 			{{range .Lights}}
@@ -103,7 +108,6 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 			<div class="card" id="light-{{ipToID .IP}}">
 				<h5>{{.Name}}</h5>
 				<div class="brightness-control">
-					<label>Brightness</label>
 					<input type="range" min="0" max="100" value="{{getBrightness $.State .IP}}"
 						hx-post="/api/lights/{{.IP}}/brightness"
 						hx-trigger="change"
@@ -122,7 +126,6 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 var lightCardTemplate = template.Must(template.New("light-card").Funcs(funcMap).Parse(`<div class="card" id="light-{{ipToID .IP}}">
 	<h5>{{.Name}}</h5>
 	<div class="brightness-control">
-		<label>Brightness</label>
 		<input type="range" min="0" max="100" value="{{.Brightness}}"
 			hx-post="/api/lights/{{.IP}}/brightness"
 			hx-trigger="change"
@@ -137,7 +140,6 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 <div class="card" id="light-{{ipToID .IP}}">
 	<h5>{{.Name}}</h5>
 	<div class="brightness-control">
-		<label>Brightness</label>
 		<input type="range" min="0" max="100" value="{{$.Brightness}}"
 			hx-post="/api/lights/{{.IP}}/brightness"
 			hx-trigger="change"
@@ -150,7 +152,6 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 {{end}}`))
 
 var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Parse(`<div class="brightness-control">
-	<label>Brightness</label>
 	<input type="range" min="0" max="100" value="{{.Brightness}}"
 		hx-post="/api/groups/{{.Group}}/brightness"
 		hx-trigger="change"
