@@ -174,6 +174,54 @@ func (h *Handlers) SetDaylight(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{"status": "ok", "message": "All lights set to daylight"}`)
 }
 
+func (h *Handlers) SetWarmLivingRoom(w http.ResponseWriter, r *http.Request) {
+	// Living room only: Scene 6 (Cozy)
+	for _, light := range h.cfg.Lights {
+		if !isInGroup(light, h.cfg.Groups) {
+			_ = h.wiz.SetScene(light.IP, 6)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "Living room lights set to warm"}`)
+}
+
+func (h *Handlers) SetDaylightLivingRoom(w http.ResponseWriter, r *http.Request) {
+	// Living room only: Scene 12 (Daylight)
+	for _, light := range h.cfg.Lights {
+		if !isInGroup(light, h.cfg.Groups) {
+			_ = h.wiz.SetScene(light.IP, 12)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "Living room lights set to daylight"}`)
+}
+
+func (h *Handlers) SetWarmBedroom(w http.ResponseWriter, r *http.Request) {
+	// Bedroom only: Scene 11 (Warm white)
+	for _, light := range h.cfg.Lights {
+		if isInGroup(light, h.cfg.Groups) {
+			_ = h.wiz.SetScene(light.IP, 11)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "Bedroom lights set to warm"}`)
+}
+
+func (h *Handlers) SetDaylightBedroom(w http.ResponseWriter, r *http.Request) {
+	// Bedroom only: Scene 12 (Daylight)
+	for _, light := range h.cfg.Lights {
+		if isInGroup(light, h.cfg.Groups) {
+			_ = h.wiz.SetScene(light.IP, 12)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "Bedroom lights set to daylight"}`)
+}
+
 func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 	brightness, err := strconv.Atoi(r.FormValue("brightness"))
 	if err != nil {

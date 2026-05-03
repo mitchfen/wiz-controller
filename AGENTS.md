@@ -12,6 +12,8 @@ Build: `go build -o bin/wiz-controller ./cmd/wiz-controller`
 Run: `./bin/wiz-controller` (reads `config.json` by default, or set `CONFIG_PATH` env var)
 Port: 80 by default, override with `PORT` env var
 
+**For testing from a laptop:** Start the app in background with `detach: true` on port 8080 using `PORT=8080` env var so the user can access it from their machine while the app runs independently on the headless server.
+
 ---
 
 ## Light Inventory
