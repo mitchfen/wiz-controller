@@ -76,10 +76,13 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 						name="brightness" />
 				</div>
 			</div>
-			<div class="scene-buttons-inline">
-				<button hx-post="/api/scenes/warm-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
-				<button hx-post="/api/scenes/daylight-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
-			</div>
+			<details class="scene-menu">
+				<summary>Scenes</summary>
+				<div class="scene-buttons">
+					<button hx-post="/api/scenes/warm-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+					<button hx-post="/api/scenes/daylight-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
+				</div>
+			</details>
 		</div>
 
 		<div class="control-row">
@@ -94,10 +97,13 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 						name="brightness" />
 				</div>
 			</div>
-			<div class="scene-buttons-inline">
-				<button hx-post="/api/scenes/warm-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
-				<button hx-post="/api/scenes/daylight-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
-			</div>
+			<details class="scene-menu">
+				<summary>Scenes</summary>
+				<div class="scene-buttons">
+					<button hx-post="/api/scenes/warm-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+					<button hx-post="/api/scenes/daylight-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
+				</div>
+			</details>
 		</div>
 
 		<div id="scene-feedback" class="scene-feedback" style="display: none;"></div>
