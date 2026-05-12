@@ -10,7 +10,7 @@ import (
 	"github.com/mitchfen/wiz-controller/internal/services"
 )
 
-func fetchAllStates(wiz *services.WizService, lights []services.Light) map[string]*services.LightState {
+func (h *Handlers) fetchAllStates(wiz *services.WizService, lights []services.Light) map[string]*services.LightState {
 	state := make(map[string]*services.LightState, len(lights))
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -22,7 +22,19 @@ func fetchAllStates(wiz *services.WizService, lights []services.Light) map[strin
 			s, err := wiz.GetLightState(l.IP)
 			if err != nil {
 				log.Printf("Failed to get state for %s: %v", l.IP, err)
-				s = &services.LightState{IsOn: false, Brightness: 0}
+				// Use cached state on error
+				h.cacheMu.Lock()
+				if cached, ok := h.stateCache[l.IP]; ok {
+					s = cached
+				} else {
+					s = &services.LightState{IsOn: false, Brightness: 0}
+				}
+				h.cacheMu.Unlock()
+			} else {
+				// Update cache on success
+				h.cacheMu.Lock()
+				h.stateCache[l.IP] = s
+				h.cacheMu.Unlock()
 			}
 			mu.Lock()
 			state[l.IP] = s
@@ -35,28 +47,32 @@ func fetchAllStates(wiz *services.WizService, lights []services.Light) map[strin
 }
 
 type Handlers struct {
-	cfg    *services.Config
-	wiz    *services.WizService
-	lights map[string]string // ip -> name mapping
+	cfg        *services.Config
+	wiz        *services.WizService
+	lights     map[string]string                   // ip -> name mapping
+	stateCache map[string]*services.LightState      // ip -> last known state
+	cacheMu    sync.Mutex
 }
 
 func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
 	h := &Handlers{
-		cfg:    cfg,
-		wiz:    wiz,
-		lights: make(map[string]string),
+		cfg:        cfg,
+		wiz:        wiz,
+		lights:     make(map[string]string),
+		stateCache: make(map[string]*services.LightState),
 	}
 
-	// Build IP->name mapping
+	// Build IP->name mapping and initialize cache with default states
 	for _, light := range cfg.Lights {
 		h.lights[light.IP] = light.Name
+		h.stateCache[light.IP] = &services.LightState{IsOn: true, Brightness: 50, SceneId: light.PreferredScene}
 	}
 
 	return h
 }
 
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	state := fetchAllStates(h.wiz, h.cfg.Lights)
+	state := h.fetchAllStates(h.wiz, h.cfg.Lights)
 
 	if err := homeTemplate.Execute(w, map[string]interface{}{
 		"Lights": h.cfg.Lights,

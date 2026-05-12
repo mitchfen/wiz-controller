@@ -161,13 +161,19 @@ wiz-controller/
 
 ### HTTP Routes
 
-| Method | Path                              | Handler              | Notes                                      |
-|--------|-----------------------------------|----------------------|--------------------------------------------|
-| GET    | `/`                               | `Home`               | Renders full UI                            |
-| POST   | `/api/lights/{ip}/brightness`     | `SetBrightness`      | Sets one light's brightness                |
-| POST   | `/api/lights/all/brightness`      | `SetAllBrightness`   | Sets all **non-grouped** lights            |
-| POST   | `/api/groups/{group}/brightness`  | `SetGroupBrightness` | Sets all lights in a named group           |
-| POST   | `/api/sync-scenes`                | `SyncScenes`         | Resets all lights to their preferred scene |
+| Method | Path                              | Handler                 | Notes                                      |
+|--------|-----------------------------------|-----------------------|--------------------------------------------|
+| GET    | `/`                               | `Home`                 | Renders full UI                            |
+| POST   | `/api/lights/{ip}/brightness`     | `SetBrightness`        | Sets one light's brightness                |
+| POST   | `/api/lights/all/brightness`      | `SetAllBrightness`     | Sets all **non-grouped** lights            |
+| POST   | `/api/groups/{group}/brightness`  | `SetGroupBrightness`   | Sets all lights in a named group           |
+| POST   | `/api/sync-scenes`                | `SyncScenes`           | Resets all lights to their preferred scene |
+| POST   | `/api/scenes/warm`                | `SetWarm`              | All lights: Scene 6 (living room) / 11 (bedroom) |
+| POST   | `/api/scenes/daylight`            | `SetDaylight`          | All lights: Scene 12                       |
+| POST   | `/api/scenes/warm-living-room`    | `SetWarmLivingRoom`    | Living room only: Scene 6                  |
+| POST   | `/api/scenes/daylight-living-room`| `SetDaylightLivingRoom`| Living room only: Scene 12                 |
+| POST   | `/api/scenes/warm-bedroom`        | `SetWarmBedroom`       | Bedroom only: Scene 11                     |
+| POST   | `/api/scenes/daylight-bedroom`    | `SetDaylightBedroom`   | Bedroom only: Scene 12                     |
 
 ---
 
@@ -188,7 +194,7 @@ wiz-controller/
 
 - Arrays are positionally aligned: `Ips[i]`, `Names[i]`, `PreferredScenes[i]` all refer to the same light.
 - Groups cause those lights to be hidden from individual sliders in the UI and exposed as a single group slider.
-- Default scene is 11 if `PreferredScenes` length doesn't match `Ips`.
+- Default scene is 6 if `PreferredScenes` length doesn't match `Ips`.
 
 ---
 
@@ -200,3 +206,32 @@ wiz-controller/
 - `LightState` struct in `wiz.go` currently only captures `IsOn` and `Brightness`. It **does not yet capture** `r`, `g`, `b`, `c`, `w`, `temp`, or `sceneId` — extending it is a known future task.
 - The `allLightCardsTemplate` and home template exclude grouped lights from individual controls using the `isInGroup` template func.
 - HTMX is used for all UI interactions — no custom JS.
+
+---
+
+## Testing
+
+### Test Suite
+- **File:** `internal/services/wiz_test.go`
+- **Run:** `bash test.sh` or `go test -v ./internal/services ./internal/handlers`
+
+### MockWizLight
+A full UDP mock WiZ light simulator for testing without real hardware:
+- Starts a UDP listener on a random port
+- Simulates `getPilot`, `setState`, and `setPilot` WiZ protocol methods
+- Thread-safe state tracking with `sync.Mutex`
+- Logs all received methods for verification
+- Supports any port (for testing with custom ports)
+
+### Test Coverage
+1. **TestSetBrightness** — Verifies brightness is set and light turns on
+2. **TestSetScene** — Verifies scene ID is updated and light turns on
+3. **TestSetLightState** — Verifies light on/off, brightness cleared when off
+4. **TestGetLightState** — Verifies state retrieval (initial: on, 50% brightness)
+5. **TestRetryLogic** — Verifies retry mechanism sends commands 3 times with delays
+
+### Key Implementation Details
+- `sendCommandMultiple()` retries 3 times with 50ms delays between sends
+- `GetLightState()` always returns 2-second UDP timeout
+- Brightness is zeroed in response if light is off
+- All tests use mock lights to avoid network dependencies

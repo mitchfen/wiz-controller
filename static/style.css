@@ -58,11 +58,52 @@ body {
 	gap: 12px;
 }
 
-.scene-buttons-inline {
+.scene-menu {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.scene-menu summary {
+	padding: 24px;
+	font-weight: 600;
+	font-size: 14px;
+	color: #667eea;
+	cursor: pointer;
+	user-select: none;
 	display: flex;
-	gap: 12px;
-	align-items: flex-end;
-	height: 100%;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+}
+
+.scene-menu summary::after {
+	content: '▼';
+	font-size: 12px;
+	transition: transform 0.2s ease;
+	display: inline-block;
+	margin-left: auto;
+}
+
+.scene-menu summary:hover {
+	background: #f5f5f5;
+	border-radius: 12px;
+}
+
+.scene-menu[open] summary {
+	border-bottom: 1px solid #e0e0e0;
+	border-radius: 12px 12px 0 0;
+}
+
+.scene-menu[open] summary::after {
+	transform: rotate(-180deg);
+}
+
+.scene-menu .scene-buttons {
+	padding: 12px 24px 24px 24px;
+	flex-direction: column;
 }
 
 .scene-btn {
