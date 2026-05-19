@@ -193,7 +193,7 @@ func (h *Handlers) SetDaylight(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetWarmLivingRoom(w http.ResponseWriter, r *http.Request) {
 	// Living room only: Scene 6 (Cozy)
 	for _, light := range h.cfg.Lights {
-		if !isInGroup(light, h.cfg.Groups) {
+		if !isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 6)
 		}
 	}
@@ -205,7 +205,7 @@ func (h *Handlers) SetWarmLivingRoom(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetDaylightLivingRoom(w http.ResponseWriter, r *http.Request) {
 	// Living room only: Scene 12 (Daylight)
 	for _, light := range h.cfg.Lights {
-		if !isInGroup(light, h.cfg.Groups) {
+		if !isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 12)
 		}
 	}
@@ -217,7 +217,7 @@ func (h *Handlers) SetDaylightLivingRoom(w http.ResponseWriter, r *http.Request)
 func (h *Handlers) SetWarmBedroom(w http.ResponseWriter, r *http.Request) {
 	// Bedroom only: Scene 11 (Warm white)
 	for _, light := range h.cfg.Lights {
-		if isInGroup(light, h.cfg.Groups) {
+		if isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 11)
 		}
 	}
@@ -229,7 +229,7 @@ func (h *Handlers) SetWarmBedroom(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetDaylightBedroom(w http.ResponseWriter, r *http.Request) {
 	// Bedroom only: Scene 12 (Daylight)
 	for _, light := range h.cfg.Lights {
-		if isInGroup(light, h.cfg.Groups) {
+		if isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 12)
 		}
 	}
@@ -270,6 +270,41 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		log.Printf("Template error: %v", err)
 	}
+}
+
+func (h *Handlers) SetGroupColor(w http.ResponseWriter, r *http.Request) {
+	groupName := r.PathValue("group")
+	r.ParseForm()
+	
+	r_val, err := strconv.Atoi(r.FormValue("r"))
+	if err != nil {
+		http.Error(w, "Invalid r value", http.StatusBadRequest)
+		return
+	}
+	g_val, err := strconv.Atoi(r.FormValue("g"))
+	if err != nil {
+		http.Error(w, "Invalid g value", http.StatusBadRequest)
+		return
+	}
+	b_val, err := strconv.Atoi(r.FormValue("b"))
+	if err != nil {
+		http.Error(w, "Invalid b value", http.StatusBadRequest)
+		return
+	}
+
+	// Find group and set all lights in it
+	for _, group := range h.cfg.Groups {
+		if group.Name == groupName {
+			for _, ip := range group.IPs {
+				_ = h.wiz.SetLightState(ip, true)
+				_ = h.wiz.SetRGB(ip, r_val, g_val, b_val)
+			}
+			break
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "Color set"}`)
 }
 
 func getGroupIPs(groups []services.Group, groupName string) []string {

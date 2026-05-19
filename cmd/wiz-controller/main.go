@@ -31,6 +31,7 @@ func main() {
 	mux.HandleFunc("POST /api/lights/{ip}/brightness", h.SetBrightness)
 	mux.HandleFunc("POST /api/lights/all/brightness", h.SetAllBrightness)
 	mux.HandleFunc("POST /api/groups/{group}/brightness", h.SetGroupBrightness)
+	mux.HandleFunc("POST /api/groups/{group}/color", h.SetGroupColor)
 	mux.HandleFunc("POST /api/sync-scenes", h.SyncScenes)
 	mux.HandleFunc("POST /api/scenes/warm", h.SetWarm)
 	mux.HandleFunc("POST /api/scenes/daylight", h.SetDaylight)

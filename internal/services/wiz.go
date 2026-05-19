@@ -15,6 +15,9 @@ type LightState struct {
 	IsOn       bool `json:"state"`
 	Brightness int  `json:"dimming"`
 	SceneId    int  `json:"sceneId"`
+	R          int  `json:"r,omitempty"`
+	G          int  `json:"g,omitempty"`
+	B          int  `json:"b,omitempty"`
 }
 
 type WizService struct {
@@ -147,6 +150,19 @@ func (w *WizService) SetBrightness(ip string, brightness int) error {
 		"params": map[string]interface{}{
 			"state":   true,
 			"dimming": brightness,
+		},
+	}
+	return w.sendCommandMultiple(ip, payload)
+}
+
+func (w *WizService) SetRGB(ip string, r, g, b int) error {
+	payload := map[string]interface{}{
+		"method": "setPilot",
+		"params": map[string]interface{}{
+			"state": true,
+			"r":     r,
+			"g":     g,
+			"b":     b,
 		},
 	}
 	return w.sendCommandMultiple(ip, payload)
