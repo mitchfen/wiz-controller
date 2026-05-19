@@ -151,3 +151,16 @@ func (w *WizService) SetBrightness(ip string, brightness int) error {
 	}
 	return w.sendCommandMultiple(ip, payload)
 }
+
+func (w *WizService) SetRGB(ip string, r, g, b int) error {
+	payload := map[string]interface{}{
+		"method": "setPilot",
+		"params": map[string]interface{}{
+			"state": true,
+			"r":     r,
+			"g":     g,
+			"b":     b,
+		},
+	}
+	return w.sendCommandMultiple(ip, payload)
+}

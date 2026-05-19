@@ -272,6 +272,41 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handlers) SetGroupColor(w http.ResponseWriter, r *http.Request) {
+	groupName := r.PathValue("group")
+	r.ParseForm()
+	
+	r_val, err := strconv.Atoi(r.FormValue("r"))
+	if err != nil {
+		http.Error(w, "Invalid r value", http.StatusBadRequest)
+		return
+	}
+	g_val, err := strconv.Atoi(r.FormValue("g"))
+	if err != nil {
+		http.Error(w, "Invalid g value", http.StatusBadRequest)
+		return
+	}
+	b_val, err := strconv.Atoi(r.FormValue("b"))
+	if err != nil {
+		http.Error(w, "Invalid b value", http.StatusBadRequest)
+		return
+	}
+
+	// Find group and set all lights in it
+	for _, group := range h.cfg.Groups {
+		if group.Name == groupName {
+			for _, ip := range group.IPs {
+				_ = h.wiz.SetLightState(ip, true)
+				_ = h.wiz.SetRGB(ip, r_val, g_val, b_val)
+			}
+			break
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "ok", "message": "Color set"}`)
+}
+
 func getGroupIPs(groups []services.Group, groupName string) []string {
 	for _, group := range groups {
 		if group.Name == groupName {

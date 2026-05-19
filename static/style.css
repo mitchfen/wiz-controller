@@ -256,15 +256,34 @@ body {
 
 @media (max-width: 600px) {
 	.room-controls {
-		flex-direction: column;
+		flex-wrap: wrap;
+		gap: 8px;
 	}
 
-	.master-slider-container {
-		flex-direction: column;
+	.master-control {
+		flex-basis: 100%;
+		order: 1;
+		width: 100%;
+		margin: 0;
 	}
 
 	.color-picker-btn {
-		width: 100%;
+		flex: 1;
+		min-width: calc(50% - 4px);
+		order: 2;
+	}
+
+	.scene-menu {
+		flex: 1;
+		min-width: calc(50% - 4px);
+		order: 3;
+	}
+
+	.scene-menu summary {
+		padding: 12px 16px;
+		display: block;
+		text-align: center;
+		white-space: nowrap;
 	}
 
 	.individual-lights {
@@ -282,4 +301,118 @@ body {
 	.room-title {
 		font-size: 20px;
 	}
+}
+
+/* Color Picker Modal */
+.color-modal {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+	justify-content: center;
+	align-items: center;
+}
+
+.color-modal-content {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+	padding: 0;
+	width: 90%;
+	max-width: 400px;
+	display: flex;
+	flex-direction: column;
+}
+
+.color-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.color-modal-header h3 {
+	font-size: 18px;
+	font-weight: 600;
+	color: #333;
+	margin: 0;
+}
+
+.color-modal-close {
+	background: none;
+	border: none;
+	font-size: 24px;
+	color: #999;
+	cursor: pointer;
+	padding: 0;
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: color 0.2s ease;
+}
+
+.color-modal-close:hover {
+	color: #333;
+}
+
+.color-modal-body {
+	padding: 30px 20px;
+	display: flex;
+	justify-content: center;
+}
+
+.color-input {
+	width: 150px;
+	height: 150px;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.color-modal-footer {
+	display: flex;
+	gap: 12px;
+	padding: 20px;
+	border-top: 1px solid #e0e0e0;
+	justify-content: flex-end;
+}
+
+.color-modal-btn {
+	padding: 10px 20px;
+	border-radius: 6px;
+	border: none;
+	font-weight: 600;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.color-modal-cancel {
+	background: #f0f0f0;
+	color: #333;
+}
+
+.color-modal-cancel:hover {
+	background: #e0e0e0;
+}
+
+.color-modal-apply {
+	background: #667eea;
+	color: white;
+}
+
+.color-modal-apply:hover {
+	background: #5568d3;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.color-modal-apply:active {
+	transform: scale(0.98);
 }

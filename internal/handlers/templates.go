@@ -80,6 +80,52 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 				}
 			}
 		});
+
+		function openColorPicker(roomName) {
+			const modal = document.getElementById('color-modal-' + roomName);
+			const colorInput = document.getElementById('color-input-' + roomName);
+			modal.style.display = 'flex';
+			colorInput.focus();
+		}
+
+		function closeColorPicker(roomName) {
+			const modal = document.getElementById('color-modal-' + roomName);
+			modal.style.display = 'none';
+		}
+
+		function applyColor(roomName) {
+			const colorInput = document.getElementById('color-input-' + roomName);
+			const color = colorInput.value;
+			const rgb = hexToRgb(color);
+			const url = '/api/groups/' + roomName + '/color';
+			const body = 'r=' + rgb.r + '&g=' + rgb.g + '&b=' + rgb.b;
+			
+			fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: body
+			}).then(r => {
+				if (r.ok) closeColorPicker(roomName);
+			});
+		}
+
+		function hexToRgb(hex) {
+			const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+			return result ? {
+				r: parseInt(result[1], 16),
+				g: parseInt(result[2], 16),
+				b: parseInt(result[3], 16)
+			} : { r: 255, g: 255, b: 255 };
+		}
+
+		window.addEventListener('click', function(event) {
+			const modals = document.querySelectorAll('.color-modal');
+			modals.forEach(modal => {
+				if (event.target === modal) {
+					modal.style.display = 'none';
+				}
+			});
+		});
 	</script>
 </head>
 <body>
@@ -100,7 +146,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 					</div>
 				</div>
 				
-				<button class="color-picker-btn" title="Color picker">🎨</button>
+				<button type="button" class="color-picker-btn" title="Color picker" onclick="openColorPicker('Living Room')">🎨</button>
 				
 				<details class="scene-menu">
 					<summary>Scenes</summary>
@@ -132,6 +178,23 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 			</div>
 		</div>
 
+		<!-- LIVING ROOM COLOR PICKER MODAL -->
+		<div id="color-modal-Living Room" class="color-modal">
+			<div class="color-modal-content">
+				<div class="color-modal-header">
+					<h3>Pick a Color</h3>
+					<button type="button" class="color-modal-close" onclick="closeColorPicker('Living Room')">✕</button>
+				</div>
+				<div class="color-modal-body">
+					<input type="color" id="color-input-Living Room" value="#ff0000" class="color-input" />
+				</div>
+				<div class="color-modal-footer">
+					<button type="button" class="color-modal-btn color-modal-cancel" onclick="closeColorPicker('Living Room')">Cancel</button>
+					<button type="button" class="color-modal-btn color-modal-apply" onclick="applyColor('Living Room')">Apply</button>
+				</div>
+			</div>
+		</div>
+
 		<!-- BEDROOM SECTION -->
 		<div class="room-section">
 			<h2 class="room-title">Bedroom</h2>
@@ -148,7 +211,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 					</div>
 				</div>
 				
-				<button class="color-picker-btn" title="Color picker">🎨</button>
+				<button type="button" class="color-picker-btn" title="Color picker" onclick="openColorPicker('Bedroom')">🎨</button>
 				
 				<details class="scene-menu">
 					<summary>Scenes</summary>
@@ -160,6 +223,23 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 			</div>
 
 			<div class="scene-feedback" style="display: none;"></div>
+		</div>
+
+		<!-- BEDROOM COLOR PICKER MODAL -->
+		<div id="color-modal-Bedroom" class="color-modal">
+			<div class="color-modal-content">
+				<div class="color-modal-header">
+					<h3>Pick a Color</h3>
+					<button type="button" class="color-modal-close" onclick="closeColorPicker('Bedroom')">✕</button>
+				</div>
+				<div class="color-modal-body">
+					<input type="color" id="color-input-Bedroom" value="#ff0000" class="color-input" />
+				</div>
+				<div class="color-modal-footer">
+					<button type="button" class="color-modal-btn color-modal-cancel" onclick="closeColorPicker('Bedroom')">Cancel</button>
+					<button type="button" class="color-modal-btn color-modal-apply" onclick="applyColor('Bedroom')">Apply</button>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>
