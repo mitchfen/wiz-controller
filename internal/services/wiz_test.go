@@ -114,6 +114,18 @@ func (m *MockWizLight) handleRequest(req map[string]interface{}) map[string]inte
 			m.state.SceneId = int(sceneId)
 			m.state.IsOn = true
 		}
+		if r, ok := params["r"].(float64); ok {
+			m.state.R = int(r)
+			m.state.IsOn = true
+		}
+		if g, ok := params["g"].(float64); ok {
+			m.state.G = int(g)
+			m.state.IsOn = true
+		}
+		if b, ok := params["b"].(float64); ok {
+			m.state.B = int(b)
+			m.state.IsOn = true
+		}
 		return map[string]interface{}{
 			"method": "setPilot",
 			"env":    "pro",
@@ -302,5 +314,34 @@ func TestRetryLogic(t *testing.T) {
 	state := mock.GetState()
 	if state.Brightness != 80 {
 		t.Errorf("Expected brightness 80, got %d", state.Brightness)
+	}
+}
+
+func TestSetRGB(t *testing.T) {
+	mock := NewMockWizLight(t)
+	defer mock.Close()
+
+	wiz := NewWizServiceWithPort(mock.Port())
+	time.Sleep(10 * time.Millisecond)
+
+	err := wiz.SetRGB(mock.IP(), 255, 128, 64)
+	if err != nil {
+		t.Fatalf("SetRGB failed: %v", err)
+	}
+
+	time.Sleep(300 * time.Millisecond)
+
+	state := mock.GetState()
+	if state.R != 255 {
+		t.Errorf("Expected R=255, got %d", state.R)
+	}
+	if state.G != 128 {
+		t.Errorf("Expected G=128, got %d", state.G)
+	}
+	if state.B != 64 {
+		t.Errorf("Expected B=64, got %d", state.B)
+	}
+	if !state.IsOn {
+		t.Errorf("Expected light to be on")
 	}
 }

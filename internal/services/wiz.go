@@ -15,6 +15,9 @@ type LightState struct {
 	IsOn       bool `json:"state"`
 	Brightness int  `json:"dimming"`
 	SceneId    int  `json:"sceneId"`
+	R          int  `json:"r,omitempty"`
+	G          int  `json:"g,omitempty"`
+	B          int  `json:"b,omitempty"`
 }
 
 type WizService struct {
