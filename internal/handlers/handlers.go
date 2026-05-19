@@ -193,7 +193,7 @@ func (h *Handlers) SetDaylight(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetWarmLivingRoom(w http.ResponseWriter, r *http.Request) {
 	// Living room only: Scene 6 (Cozy)
 	for _, light := range h.cfg.Lights {
-		if !isInGroup(light, h.cfg.Groups) {
+		if !isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 6)
 		}
 	}
@@ -205,7 +205,7 @@ func (h *Handlers) SetWarmLivingRoom(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetDaylightLivingRoom(w http.ResponseWriter, r *http.Request) {
 	// Living room only: Scene 12 (Daylight)
 	for _, light := range h.cfg.Lights {
-		if !isInGroup(light, h.cfg.Groups) {
+		if !isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 12)
 		}
 	}
@@ -217,7 +217,7 @@ func (h *Handlers) SetDaylightLivingRoom(w http.ResponseWriter, r *http.Request)
 func (h *Handlers) SetWarmBedroom(w http.ResponseWriter, r *http.Request) {
 	// Bedroom only: Scene 11 (Warm white)
 	for _, light := range h.cfg.Lights {
-		if isInGroup(light, h.cfg.Groups) {
+		if isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 11)
 		}
 	}
@@ -229,7 +229,7 @@ func (h *Handlers) SetWarmBedroom(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetDaylightBedroom(w http.ResponseWriter, r *http.Request) {
 	// Bedroom only: Scene 12 (Daylight)
 	for _, light := range h.cfg.Lights {
-		if isInGroup(light, h.cfg.Groups) {
+		if isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 12)
 		}
 	}

@@ -18,6 +18,19 @@ func isInGroup(light services.Light, groups []services.Group) bool {
 	return false
 }
 
+func isInSpecificGroup(light services.Light, groups []services.Group, groupName string) bool {
+	for _, group := range groups {
+		if group.Name == groupName {
+			for _, ip := range group.IPs {
+				if ip == light.IP {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func getBrightness(state map[string]*services.LightState, ip string) int {
 	if s, ok := state[ip]; ok && s.IsOn {
 		return s.Brightness
@@ -30,11 +43,18 @@ func ipToID(ip string) string {
 	return strings.ReplaceAll(ip, ".", "-")
 }
 
+// groupToID converts a group name to a safe HTML/CSS identifier by replacing spaces with dashes and converting to lowercase.
+func groupToID(name string) string {
+	return strings.ToLower(strings.ReplaceAll(name, " ", "-"))
+}
+
 var funcMap = template.FuncMap{
-	"isInGroup":     isInGroup,
-	"getBrightness": getBrightness,
-	"ipToID":        ipToID,
-	"getGroupIPs":   getGroupIPs,
+	"isInGroup":         isInGroup,
+	"isInSpecificGroup": isInSpecificGroup,
+	"getBrightness":     getBrightness,
+	"ipToID":            ipToID,
+	"groupToID":         groupToID,
+	"getGroupIPs":       getGroupIPs,
 }
 
 var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DOCTYPE html>
@@ -50,7 +70,7 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 			if (evt.detail.xhr.status === 200) {
 				const button = evt.detail.target;
 				if (button.classList.contains('scene-btn')) {
-					const feedbackDiv = document.getElementById('scene-feedback');
+					const feedbackDiv = button.closest('.room-section').querySelector('.scene-feedback');
 					const sceneName = button.textContent.trim();
 					feedbackDiv.textContent = sceneName + ' scene activated!';
 					feedbackDiv.style.display = 'block';
@@ -64,66 +84,82 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 </head>
 <body>
 	<div class="container">
-		<div class="control-row">
-			<div class="master-control">
-				<label>All Living Room Lights</label>
-				<div class="master-slider-container">
-					<input type="range" min="0" max="100" value="0"
-						hx-post="/api/lights/all/brightness"
-						hx-trigger="change"
-						hx-swap="innerHTML"
-						hx-target=".light-grid"
-						name="brightness" />
+		<!-- LIVING ROOM SECTION -->
+		<div class="room-section">
+			<h2 class="room-title">Living Room</h2>
+			
+			<div class="room-controls">
+				<div class="master-control" id="group-living-room">
+					<div class="master-slider-container brightness-control">
+						<input type="range" min="0" max="100" value="{{getBrightness $.State (index (getGroupIPs $.Groups "Living Room") 0)}}"
+							hx-post="/api/groups/Living Room/brightness"
+							hx-trigger="change"
+							hx-swap="innerHTML"
+							hx-target="#group-living-room .brightness-control"
+							name="brightness" />
+					</div>
 				</div>
+				
+				<button class="color-picker-btn" title="Color picker">🎨</button>
+				
+				<details class="scene-menu">
+					<summary>Scenes</summary>
+					<div class="scene-buttons">
+						<button type="button" hx-post="/api/scenes/warm-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+						<button type="button" hx-post="/api/scenes/daylight-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
+					</div>
+				</details>
 			</div>
-			<details class="scene-menu">
-				<summary>Scenes</summary>
-				<div class="scene-buttons">
-					<button hx-post="/api/scenes/warm-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
-					<button hx-post="/api/scenes/daylight-living-room" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
+
+			<div class="scene-feedback" style="display: none;"></div>
+
+			<div class="individual-lights">
+				{{range .Lights}}
+				{{if not (isInSpecificGroup . $.Groups "Bedroom")}}
+				<div class="card" id="light-{{ipToID .IP}}">
+					<h5>{{.Name}}</h5>
+					<div class="brightness-control">
+						<input type="range" min="0" max="100" value="{{getBrightness $.State .IP}}"
+							hx-post="/api/lights/{{.IP}}/brightness"
+							hx-trigger="change"
+							hx-swap="outerHTML"
+							hx-target="#light-{{ipToID .IP}}"
+							name="brightness" />
+					</div>
 				</div>
-			</details>
+				{{end}}
+				{{end}}
+			</div>
 		</div>
 
-		<div class="control-row">
-			<div class="master-control" id="group-Bedroom">
-				<label>Bedroom</label>
-				<div class="master-slider-container brightness-control">
-					<input type="range" min="0" max="100" value="{{getBrightness $.State (index (getGroupIPs $.Groups "Bedroom") 0)}}"
-						hx-post="/api/groups/Bedroom/brightness"
-						hx-trigger="change"
-						hx-swap="innerHTML"
-						hx-target="#group-Bedroom .brightness-control"
-						name="brightness" />
+		<!-- BEDROOM SECTION -->
+		<div class="room-section">
+			<h2 class="room-title">Bedroom</h2>
+			
+			<div class="room-controls">
+				<div class="master-control" id="group-bedroom">
+					<div class="master-slider-container brightness-control">
+						<input type="range" min="0" max="100" value="{{getBrightness $.State (index (getGroupIPs $.Groups "Bedroom") 0)}}"
+							hx-post="/api/groups/Bedroom/brightness"
+							hx-trigger="change"
+							hx-swap="innerHTML"
+							hx-target="#group-bedroom .brightness-control"
+							name="brightness" />
+					</div>
 				</div>
+				
+				<button class="color-picker-btn" title="Color picker">🎨</button>
+				
+				<details class="scene-menu">
+					<summary>Scenes</summary>
+					<div class="scene-buttons">
+						<button type="button" hx-post="/api/scenes/warm-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
+						<button type="button" hx-post="/api/scenes/daylight-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
+					</div>
+				</details>
 			</div>
-			<details class="scene-menu">
-				<summary>Scenes</summary>
-				<div class="scene-buttons">
-					<button hx-post="/api/scenes/warm-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Warm</button>
-					<button hx-post="/api/scenes/daylight-bedroom" hx-trigger="click" hx-swap="none" class="scene-btn">Daylight</button>
-				</div>
-			</details>
-		</div>
 
-		<div id="scene-feedback" class="scene-feedback" style="display: none;"></div>
-
-		<div class="light-grid" id="light-grid">
-			{{range .Lights}}
-			{{if not (isInGroup . $.Groups)}}
-			<div class="card" id="light-{{ipToID .IP}}">
-				<h5>{{.Name}}</h5>
-				<div class="brightness-control">
-					<input type="range" min="0" max="100" value="{{getBrightness $.State .IP}}"
-						hx-post="/api/lights/{{.IP}}/brightness"
-						hx-trigger="change"
-						hx-swap="outerHTML"
-						hx-target="#light-{{ipToID .IP}}"
-						name="brightness" />
-				</div>
-			</div>
-			{{end}}
-			{{end}}
+			<div class="scene-feedback" style="display: none;"></div>
 		</div>
 	</div>
 </body>
@@ -157,11 +193,11 @@ var allLightCardsTemplate = template.Must(template.New("all-light-cards").Funcs(
 {{end}}
 {{end}}`))
 
-var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Parse(`<div class="brightness-control">
+var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Funcs(funcMap).Parse(`<div class="brightness-control">
 	<input type="range" min="0" max="100" value="{{.Brightness}}"
 		hx-post="/api/groups/{{.Group}}/brightness"
 		hx-trigger="change"
 		hx-swap="innerHTML"
-		hx-target="#group-{{.Group}} .brightness-control"
+		hx-target="#group-{{groupToID .Group}} .brightness-control"
 		name="brightness" />
 </div>`))
