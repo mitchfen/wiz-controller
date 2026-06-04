@@ -63,6 +63,8 @@ var homeTemplate = template.Must(template.New("home").Funcs(funcMap).Parse(`<!DO
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>WiZ Controller</title>
+	<link rel="icon" type="image/png" href="/static/favicon.png">
+	<link rel="manifest" href="/static/manifest.json">
 	<link rel="stylesheet" href="/static/style.css">
 	<script src="https://unpkg.com/htmx.org@2.0.0"></script>
 	<script>
