@@ -6,7 +6,7 @@
 
 body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
 	min-height: 100vh;
 	display: flex;
 	align-items: flex-start;
@@ -33,10 +33,10 @@ body {
 .room-title {
 	font-size: 24px;
 	font-weight: 700;
-	color: #333;
+	color: #1e293b;
 	margin-bottom: 20px;
 	padding-bottom: 12px;
-	border-bottom: 2px solid #667eea;
+	border-bottom: 2px solid #475569;
 }
 
 .room-controls {
@@ -61,7 +61,7 @@ body {
 .color-picker-btn {
 	padding: 8px 12px;
 	background: white;
-	border: 2px solid #667eea;
+	border: 2px solid #475569;
 	border-radius: 8px;
 	font-size: 18px;
 	cursor: pointer;
@@ -71,8 +71,8 @@ body {
 }
 
 .color-picker-btn:hover {
-	background: #f0f0f0;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+	background: #f1f5f9;
+	box-shadow: 0 4px 12px rgba(71, 85, 105, 0.4);
 }
 
 .color-picker-btn:active {
@@ -96,7 +96,7 @@ body {
 	font-weight: 600;
 	font-size: 14px;
 	color: white;
-	background: #667eea;
+	background: #475569;
 	cursor: pointer;
 	user-select: none;
 	display: flex;
@@ -108,8 +108,8 @@ body {
 }
 
 .scene-menu summary:hover {
-	background: #5568d3;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+	background: #334155;
+	box-shadow: 0 4px 12px rgba(71, 85, 105, 0.4);
 }
 
 .scene-menu[open] summary {
@@ -122,7 +122,7 @@ body {
 
 .scene-menu .scene-buttons {
 	background: white;
-	border: 1px solid #e0e0e0;
+	border: 1px solid #e2e8f0;
 	border-top: none;
 	padding: 12px;
 	flex-direction: column;
@@ -133,9 +133,9 @@ body {
 .scene-btn {
 	flex: 1;
 	padding: 10px 16px;
-	border: 2px solid #667eea;
+	border: 2px solid #475569;
 	background: white;
-	color: #667eea;
+	color: #475569;
 	border-radius: 6px;
 	font-weight: 600;
 	font-size: 14px;
@@ -144,9 +144,9 @@ body {
 }
 
 .scene-btn:hover {
-	background: #667eea;
+	background: #475569;
 	color: white;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+	box-shadow: 0 4px 12px rgba(71, 85, 105, 0.4);
 }
 
 .scene-btn:active {
@@ -185,7 +185,7 @@ body {
 	width: 100%;
 	height: 6px;
 	border-radius: 3px;
-	background: #e0e0e0;
+	background: #cbd5e1;
 	outline: none;
 	-webkit-appearance: none;
 	appearance: none;
@@ -199,9 +199,9 @@ body {
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
-	background: #667eea;
+	background: #64748b;
 	cursor: pointer;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+	box-shadow: 0 2px 8px rgba(71, 85, 105, 0.4);
 }
 
 .master-slider-container input[type="range"]::-moz-range-thumb,
@@ -209,10 +209,10 @@ body {
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
-	background: #667eea;
+	background: #64748b;
 	cursor: pointer;
 	border: none;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+	box-shadow: 0 2px 8px rgba(71, 85, 105, 0.4);
 }
 
 .individual-lights {
@@ -223,7 +223,7 @@ body {
 
 .card {
 	background: white;
-	border: 1px solid #e0e0e0;
+	border: 1px solid #e2e8f0;
 	padding: 16px;
 	border-radius: 8px;
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -238,7 +238,7 @@ body {
 	font-size: 16px;
 	font-weight: 600;
 	margin-bottom: 12px;
-	color: #333;
+	color: #1e293b;
 }
 
 .brightness-control {
@@ -333,13 +333,13 @@ body {
 	justify-content: space-between;
 	align-items: center;
 	padding: 20px;
-	border-bottom: 1px solid #e0e0e0;
+	border-bottom: 1px solid #e2e8f0;
 }
 
 .color-modal-header h3 {
 	font-size: 18px;
 	font-weight: 600;
-	color: #333;
+	color: #1e293b;
 	margin: 0;
 }
 
@@ -359,7 +359,7 @@ body {
 }
 
 .color-modal-close:hover {
-	color: #333;
+	color: #1e293b;
 }
 
 .color-modal-body {
@@ -380,7 +380,7 @@ body {
 	display: flex;
 	gap: 12px;
 	padding: 20px;
-	border-top: 1px solid #e0e0e0;
+	border-top: 1px solid #e2e8f0;
 	justify-content: flex-end;
 }
 
@@ -395,22 +395,22 @@ body {
 }
 
 .color-modal-cancel {
-	background: #f0f0f0;
-	color: #333;
+	background: #f1f5f9;
+	color: #334155;
 }
 
 .color-modal-cancel:hover {
-	background: #e0e0e0;
+	background: #e2e8f0;
 }
 
 .color-modal-apply {
-	background: #667eea;
+	background: #475569;
 	color: white;
 }
 
 .color-modal-apply:hover {
-	background: #5568d3;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+	background: #334155;
+	box-shadow: 0 4px 12px rgba(71, 85, 105, 0.4);
 }
 
 .color-modal-apply:active {
