@@ -267,3 +267,4 @@ __pycache__/
 appsettings.development.json
 reminder.txt
 
+coverage.out
