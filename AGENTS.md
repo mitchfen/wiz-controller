@@ -146,16 +146,16 @@ Success response:
 
 ```
 wiz-controller/
-├── config.json                         # Light IPs, names, scenes, groups
 ├── deploy/
 │   ├── Dockerfile                      # Docker container build script
 │   └── manifest.yaml                   # Kubernetes deployment manifest
 ├── scripts/
-│   ├── check_lights.py                 # Query state of all WiZ lights
-│   ├── set_scene.py                    # Preset scene activator
+│   ├── check_lights.sh                 # Query state of all WiZ lights
+│   ├── set_scene.sh                    # Preset scene activator
 │   └── test.sh                         # Run unit tests
 └── src/                                # Go application source directory
     ├── go.mod                          # Go module definition
+    ├── config.json                     # Light IPs, names, scenes, groups
     ├── cmd/wiz-controller/main.go      # Entry point, routes
     ├── internal/
     │   ├── services/

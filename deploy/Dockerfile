@@ -19,7 +19,7 @@ RUN apk --no-cache add ca-certificates
 COPY --from=build /source/wiz-controller .
 
 # Copy config and static files
-COPY config.json .
+COPY src/config.json .
 COPY src/static ./static
 
 # The app expects port 80
