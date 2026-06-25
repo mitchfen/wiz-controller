@@ -3,7 +3,7 @@ FROM golang:1.26-alpine AS build
 WORKDIR /source
 
 # Copy source code
-COPY . .
+COPY src/ .
 
 # Build the application
 RUN go build -o wiz-controller ./cmd/wiz-controller
@@ -20,7 +20,7 @@ COPY --from=build /source/wiz-controller .
 
 # Copy config and static files
 COPY config.json .
-COPY static ./static
+COPY src/static ./static
 
 # The app expects port 80
 EXPOSE 80

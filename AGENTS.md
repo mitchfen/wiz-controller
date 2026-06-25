@@ -8,8 +8,8 @@ This file provides context for AI agents working on this project.
 
 A Go web app that controls WiZ smart lights on the local network. It serves an HTMX-powered UI where anyone on the network can adjust brightness. Communication with lights happens over **UDP on port 38899** using the WiZ JSON-RPC protocol.
 
-Build: `go build -o bin/wiz-controller ./cmd/wiz-controller`
-Run: `./bin/wiz-controller` (reads `config.json` by default, or set `CONFIG_PATH` env var)
+Build: `cd src && go build -o ../bin/wiz-controller ./cmd/wiz-controller`
+Run: `./bin/wiz-controller` (reads `config.json` by default, or set `CONFIG_PATH` env var; requires running from `src` or setting correct path context for static files)
 Port: 80 by default, override with `PORT` env var
 
 **For testing from a laptop:** Start the app in background with `detach: true` on port 8080 using `PORT=8080` env var so the user can access it from their machine while the app runs independently on the headless server.
@@ -146,17 +146,26 @@ Success response:
 
 ```
 wiz-controller/
-├── cmd/wiz-controller/main.go          # Entry point, routes
 ├── config.json                         # Light IPs, names, scenes, groups
-├── internal/
-│   ├── services/
-│   │   ├── config.go                   # Config loading, Light/Group/Config structs
-│   │   └── wiz.go                      # UDP comms: GetLightState, SetBrightness, SetScene, SetLightState
-│   └── handlers/
-│       ├── handlers.go                 # HTTP handlers
-│       └── templates.go                # Go HTML templates + template func map
-├── static/style.css
-└── Dockerfile
+├── deploy/
+│   ├── Dockerfile                      # Docker container build script
+│   └── manifest.yaml                   # Kubernetes deployment manifest
+├── scripts/
+│   ├── check_lights.py                 # Query state of all WiZ lights
+│   ├── set_scene.py                    # Preset scene activator
+│   └── test.sh                         # Run unit tests
+└── src/                                # Go application source directory
+    ├── go.mod                          # Go module definition
+    ├── cmd/wiz-controller/main.go      # Entry point, routes
+    ├── internal/
+    │   ├── services/
+    │   │   ├── config.go               # Config loading, Light/Group/Config structs
+    │   │   └── wiz.go                  # UDP comms: GetLightState, SetBrightness, SetScene, SetLightState
+    │   └── handlers/
+    │       ├── handlers.go             # HTTP handlers
+    │       └── templates.go            # Go HTML templates + template func map
+    └── static/                         # Static assets (stylesheets, icons, manifests)
+        └── style.css
 ```
 
 ### HTTP Routes
@@ -212,8 +221,8 @@ wiz-controller/
 ## Testing
 
 ### Test Suite
-- **File:** `internal/services/wiz_test.go`
-- **Run:** `bash test.sh` or `go test -v ./internal/services ./internal/handlers`
+- **File:** `src/internal/services/wiz_test.go`
+- **Run:** `bash scripts/test.sh` or `cd src && go test -v ./internal/services ./internal/handlers`
 
 ### MockWizLight
 A full UDP mock WiZ light simulator for testing without real hardware:

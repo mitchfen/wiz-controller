@@ -21,7 +21,7 @@ jobs:
         go-version: '1.26'
 
     - name: Run tests
-      run: ./test.sh
+      run: ./scripts/test.sh
 
     - name: Build Docker image
-      run: docker build -t wiz-controller:test .
+      run: docker build -t wiz-controller:test -f deploy/Dockerfile .
