@@ -129,6 +129,7 @@ func (h *Handlers) SetGroupBrightness(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find group and set all lights in it
+	var groupLights []services.Light
 	for _, group := range h.cfg.Groups {
 		if group.Name == groupName {
 			for _, ip := range group.IPs {
@@ -139,15 +140,16 @@ func (h *Handlers) SetGroupBrightness(w http.ResponseWriter, r *http.Request) {
 				}
 
 			}
+			groupLights = getLightsForIPs(h.cfg.Lights, group.IPs)
 			break
 		}
 	}
 
-	// Return group cards for HTMX swap
+	// Return group cards for HTMX swap (includes out-of-band updates for each light's own card)
 	w.Header().Set("Content-Type", "text/html")
 	if err := groupLightCardsTemplate.Execute(w, map[string]interface{}{
 		"Group":      groupName,
-		"IPs":        getGroupIPs(h.cfg.Groups, groupName),
+		"Lights":     groupLights,
 		"Brightness": brightness,
 	}); err != nil {
 		log.Printf("Template error: %v", err)
@@ -314,4 +316,18 @@ func getGroupIPs(groups []services.Group, groupName string) []string {
 		}
 	}
 	return []string{}
+}
+
+func getLightsForIPs(lights []services.Light, ips []string) []services.Light {
+	ipSet := make(map[string]bool, len(ips))
+	for _, ip := range ips {
+		ipSet[ip] = true
+	}
+	var result []services.Light
+	for _, light := range lights {
+		if ipSet[light.IP] {
+			result = append(result, light)
+		}
+	}
+	return result
 }

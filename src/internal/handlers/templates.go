@@ -283,4 +283,17 @@ var groupLightCardsTemplate = template.Must(template.New("group-light-cards").Fu
 		hx-swap="innerHTML"
 		hx-target="#group-{{groupToID .Group}} .brightness-control"
 		name="brightness" />
-</div>`))
+</div>
+{{range .Lights}}
+<div class="card" id="light-{{ipToID .IP}}" hx-swap-oob="true">
+	<h5>{{.Name}}</h5>
+	<div class="brightness-control">
+		<input type="range" min="0" max="100" value="{{$.Brightness}}"
+			hx-post="/api/lights/{{.IP}}/brightness"
+			hx-trigger="change"
+			hx-swap="outerHTML"
+			hx-target="#light-{{ipToID .IP}}"
+			name="brightness" />
+	</div>
+</div>
+{{end}}`))
