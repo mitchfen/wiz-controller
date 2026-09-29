@@ -28,6 +28,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", h.Home)
+	mux.HandleFunc("GET /healthz", h.Health)
 	mux.HandleFunc("POST /api/lights/{ip}/brightness", h.SetBrightness)
 	mux.HandleFunc("POST /api/lights/all/brightness", h.SetAllBrightness)
 	mux.HandleFunc("POST /api/groups/{group}/brightness", h.SetGroupBrightness)

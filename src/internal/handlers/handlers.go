@@ -47,11 +47,13 @@ func (h *Handlers) fetchAllStates(wiz *services.WizService, lights []services.Li
 }
 
 type Handlers struct {
-	cfg        *services.Config
-	wiz        *services.WizService
-	lights     map[string]string                   // ip -> name mapping
-	stateCache map[string]*services.LightState      // ip -> last known state
-	cacheMu    sync.Mutex
+	cfg            *services.Config
+	wiz            *services.WizService
+	lights         map[string]string               // ip -> name mapping
+	stateCache     map[string]*services.LightState // ip -> last known state
+	cacheMu        sync.Mutex
+	refreshMu      sync.Mutex
+	refreshRunning bool
 }
 
 func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
@@ -62,17 +64,55 @@ func NewHandlers(cfg *services.Config, wiz *services.WizService) *Handlers {
 		stateCache: make(map[string]*services.LightState),
 	}
 
-	// Build IP->name mapping and initialize cache with default states
+	// Build IP->name mapping and initialize cache with offline states.
 	for _, light := range cfg.Lights {
 		h.lights[light.IP] = light.Name
-		h.stateCache[light.IP] = &services.LightState{IsOn: true, Brightness: 50, SceneId: light.PreferredScene}
+		h.stateCache[light.IP] = &services.LightState{IsOn: false, Brightness: 0, SceneId: light.PreferredScene}
 	}
 
 	return h
 }
 
+func (h *Handlers) cachedStates(lights []services.Light) map[string]*services.LightState {
+	state := make(map[string]*services.LightState, len(lights))
+
+	h.cacheMu.Lock()
+	defer h.cacheMu.Unlock()
+
+	for _, light := range lights {
+		if cached, ok := h.stateCache[light.IP]; ok {
+			stateCopy := *cached
+			state[light.IP] = &stateCopy
+			continue
+		}
+		state[light.IP] = &services.LightState{}
+	}
+
+	return state
+}
+
+func (h *Handlers) refreshStates() {
+	h.refreshMu.Lock()
+	if h.refreshRunning {
+		h.refreshMu.Unlock()
+		return
+	}
+	h.refreshRunning = true
+	h.refreshMu.Unlock()
+
+	go func() {
+		defer func() {
+			h.refreshMu.Lock()
+			h.refreshRunning = false
+			h.refreshMu.Unlock()
+		}()
+		h.fetchAllStates(h.wiz, h.cfg.Lights)
+	}()
+}
+
 func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	state := h.fetchAllStates(h.wiz, h.cfg.Lights)
+	state := h.cachedStates(h.cfg.Lights)
+	h.refreshStates()
 
 	if err := homeTemplate.Execute(w, map[string]interface{}{
 		"Lights": h.cfg.Lights,
@@ -82,6 +122,10 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Template error", http.StatusInternalServerError)
 	}
+}
+
+func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handlers) SetBrightness(w http.ResponseWriter, r *http.Request) {
@@ -277,7 +321,7 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) SetGroupColor(w http.ResponseWriter, r *http.Request) {
 	groupName := r.PathValue("group")
 	r.ParseForm()
-	
+
 	r_val, err := strconv.Atoi(r.FormValue("r"))
 	if err != nil {
 		http.Error(w, "Invalid r value", http.StatusBadRequest)
