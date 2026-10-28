@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/mitchfen/wiz-controller/internal/handlers"
 	"github.com/mitchfen/wiz-controller/internal/services"
@@ -25,6 +26,8 @@ func main() {
 
 	wizSvc := services.NewWizService()
 	h := handlers.NewHandlers(cfg, wizSvc)
+	stopPolling := h.StartPolling(10 * time.Second)
+	defer stopPolling()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", h.Home)

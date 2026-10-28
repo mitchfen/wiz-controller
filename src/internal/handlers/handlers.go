@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/mitchfen/wiz-controller/internal/services"
 )
@@ -91,6 +92,75 @@ func (h *Handlers) cachedStates(lights []services.Light) map[string]*services.Li
 	return state
 }
 
+func (h *Handlers) updateCacheBrightness(ip string, brightness int) {
+	h.cacheMu.Lock()
+	defer h.cacheMu.Unlock()
+	cached, ok := h.stateCache[ip]
+	if !ok {
+		cached = &services.LightState{}
+		h.stateCache[ip] = cached
+	}
+	if brightness == 0 {
+		cached.IsOn = false
+		cached.Brightness = 0
+	} else {
+		cached.IsOn = true
+		cached.Brightness = brightness
+	}
+}
+
+func (h *Handlers) updateCacheRGB(ip string, r, g, b int) {
+	h.cacheMu.Lock()
+	defer h.cacheMu.Unlock()
+	cached, ok := h.stateCache[ip]
+	if !ok {
+		cached = &services.LightState{}
+		h.stateCache[ip] = cached
+	}
+	cached.IsOn = true
+	cached.R = r
+	cached.G = g
+	cached.B = b
+}
+
+func (h *Handlers) updateCacheScene(ip string, sceneId int) {
+	h.cacheMu.Lock()
+	defer h.cacheMu.Unlock()
+	cached, ok := h.stateCache[ip]
+	if !ok {
+		cached = &services.LightState{}
+		h.stateCache[ip] = cached
+	}
+	cached.IsOn = true
+	cached.SceneId = sceneId
+	if cached.Brightness == 0 {
+		cached.Brightness = 100
+	}
+}
+
+func (h *Handlers) StartPolling(interval time.Duration) func() {
+	h.refreshStates()
+
+	ticker := time.NewTicker(interval)
+	done := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				h.refreshStates()
+			case <-done:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
+	return func() {
+		close(done)
+	}
+}
+
 func (h *Handlers) refreshStates() {
 	h.refreshMu.Lock()
 	if h.refreshRunning {
@@ -147,6 +217,7 @@ func (h *Handlers) SetBrightness(w http.ResponseWriter, r *http.Request) {
 	} else {
 		_ = h.wiz.SetBrightness(ip, brightness)
 	}
+	h.updateCacheBrightness(ip, brightness)
 
 	// Return HTML for HTMX swap
 	w.Header().Set("Content-Type", "text/html")
@@ -182,7 +253,7 @@ func (h *Handlers) SetGroupBrightness(w http.ResponseWriter, r *http.Request) {
 				} else {
 					_ = h.wiz.SetBrightness(ip, brightness)
 				}
-
+				h.updateCacheBrightness(ip, brightness)
 			}
 			groupLights = getLightsForIPs(h.cfg.Lights, group.IPs)
 			break
@@ -204,6 +275,7 @@ func (h *Handlers) SyncScenes(w http.ResponseWriter, r *http.Request) {
 	for _, light := range h.cfg.Lights {
 		if light.PreferredScene > 0 {
 			_ = h.wiz.SetScene(light.IP, light.PreferredScene)
+			h.updateCacheScene(light.IP, light.PreferredScene)
 		}
 	}
 
@@ -220,6 +292,7 @@ func (h *Handlers) SetWarm(w http.ResponseWriter, r *http.Request) {
 			sceneId = 11 // bedroom scene
 		}
 		_ = h.wiz.SetScene(light.IP, sceneId)
+		h.updateCacheScene(light.IP, sceneId)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -230,6 +303,7 @@ func (h *Handlers) SetDaylight(w http.ResponseWriter, r *http.Request) {
 	// All lights: Scene 12 (Daylight)
 	for _, light := range h.cfg.Lights {
 		_ = h.wiz.SetScene(light.IP, 12)
+		h.updateCacheScene(light.IP, 12)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -241,6 +315,7 @@ func (h *Handlers) SetWarmLivingRoom(w http.ResponseWriter, r *http.Request) {
 	for _, light := range h.cfg.Lights {
 		if !isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 6)
+			h.updateCacheScene(light.IP, 6)
 		}
 	}
 
@@ -253,6 +328,7 @@ func (h *Handlers) SetDaylightLivingRoom(w http.ResponseWriter, r *http.Request)
 	for _, light := range h.cfg.Lights {
 		if !isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 12)
+			h.updateCacheScene(light.IP, 12)
 		}
 	}
 
@@ -265,6 +341,7 @@ func (h *Handlers) SetWarmBedroom(w http.ResponseWriter, r *http.Request) {
 	for _, light := range h.cfg.Lights {
 		if isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 11)
+			h.updateCacheScene(light.IP, 11)
 		}
 	}
 
@@ -277,6 +354,7 @@ func (h *Handlers) SetDaylightBedroom(w http.ResponseWriter, r *http.Request) {
 	for _, light := range h.cfg.Lights {
 		if isInSpecificGroup(light, h.cfg.Groups, "Bedroom") {
 			_ = h.wiz.SetScene(light.IP, 12)
+			h.updateCacheScene(light.IP, 12)
 		}
 	}
 
@@ -304,6 +382,7 @@ func (h *Handlers) SetAllBrightness(w http.ResponseWriter, r *http.Request) {
 			} else {
 				_ = h.wiz.SetBrightness(light.IP, brightness)
 			}
+			h.updateCacheBrightness(light.IP, brightness)
 		}
 	}
 
@@ -344,6 +423,7 @@ func (h *Handlers) SetGroupColor(w http.ResponseWriter, r *http.Request) {
 			for _, ip := range group.IPs {
 				_ = h.wiz.SetLightState(ip, true)
 				_ = h.wiz.SetRGB(ip, r_val, g_val, b_val)
+				h.updateCacheRGB(ip, r_val, g_val, b_val)
 			}
 			break
 		}
